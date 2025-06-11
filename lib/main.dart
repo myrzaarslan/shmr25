@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
+import 'routing/app_router.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const FinanceApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class FinanceApp extends StatelessWidget {
+  const FinanceApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello2 World!'))),
-    );
+    return MaterialApp.router(routerConfig: goRouter);
   }
 }
