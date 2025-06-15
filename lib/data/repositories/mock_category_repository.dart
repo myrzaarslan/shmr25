@@ -3,13 +3,11 @@ import '../../domain/repositories/category_repository.dart';
 
 class MockCategoryRepository implements CategoryRepository {
   static final List<Category> _categories = [
-    // Income categories
     const Category(id: 1, name: 'Зарплата', emoji: '💰', isIncome: true),
     const Category(id: 2, name: 'Подработка', emoji: '💻', isIncome: true),
     const Category(id: 3, name: 'Инвестиции', emoji: '📈', isIncome: true),
     const Category(id: 4, name: 'Подарки', emoji: '🎁', isIncome: true),
 
-    // Expense categories
     const Category(id: 5, name: 'Продукты', emoji: '🛒', isIncome: false),
     const Category(id: 6, name: 'Транспорт', emoji: '🚗', isIncome: false),
     const Category(id: 7, name: 'Развлечения', emoji: '🎬', isIncome: false),

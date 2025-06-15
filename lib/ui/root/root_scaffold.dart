@@ -14,40 +14,40 @@ class RootScaffold extends StatelessWidget {
     );
   }
 
-  BottomNavigationBarItem _buildItem(String asset, String label, int index) {
-    final isSelected = navigationShell.currentIndex == index;
-    return BottomNavigationBarItem(
-      icon: SvgPicture.asset(
-        'assets/icons/$asset',
-        width: 24,
-        height: 24,
-        colorFilter: ColorFilter.mode(
-          isSelected ? const Color(0xFF2ECC71) : Colors.grey,
-          BlendMode.srcIn,
-        ),
-      ),
-      label: label,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF2ECC71),
-        unselectedItemColor: Colors.grey,
-        currentIndex: navigationShell.currentIndex,
-        onTap: _goBranch,
-        items: [
-          _buildItem('expenses.svg', 'Расходы', 0),
-          _buildItem('income.svg', 'Доходы', 1),
-          _buildItem('account.svg', 'Счёт', 2),
-          _buildItem('category.svg', 'Статьи', 3),
-          _buildItem('settings.svg', 'Настройки', 4),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: _goBranch,
+        destinations: [
+          _buildDestination('expenses.svg', 'Расходы', 0),
+          _buildDestination('income.svg', 'Доходы', 1),
+          _buildDestination('account.svg', 'Счёт', 2),
+          _buildDestination('category.svg', 'Статьи', 3),
+          _buildDestination('settings.svg', 'Настройки', 4),
         ],
       ),
+    );
+  }
+
+  NavigationDestination _buildDestination(
+    String asset,
+    String label,
+    int index,
+  ) {
+    final isSelected = navigationShell.currentIndex == index;
+    return NavigationDestination(
+      icon: SvgPicture.asset(
+        'assets/icons/$asset',
+        width: 24,
+        height: 24,
+        colorFilter: isSelected
+            ? null
+            : const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+      ),
+      label: label,
     );
   }
 }

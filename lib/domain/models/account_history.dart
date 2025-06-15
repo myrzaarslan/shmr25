@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'bank_account.dart';
 
 part 'account_history.freezed.dart';
 part 'account_history.g.dart';
@@ -24,12 +23,25 @@ abstract class AccountHistoryItem with _$AccountHistoryItem {
     required int id,
     required int accountId,
     required String changeType,
-    required BankAccount previousState,
-    required BankAccount newState,
+    required AccountState previousState,
+    required AccountState newState,
     required DateTime changeTimestamp,
     required DateTime createdAt,
   }) = _AccountHistoryItem;
 
   factory AccountHistoryItem.fromJson(Map<String, dynamic> json) =>
       _$AccountHistoryItemFromJson(json);
+}
+
+@freezed
+abstract class AccountState with _$AccountState {
+  const factory AccountState({
+    required int id,
+    required String name,
+    required String balance,
+    required String currency,
+  }) = _AccountState;
+
+  factory AccountState.fromJson(Map<String, dynamic> json) =>
+      _$AccountStateFromJson(json);
 }
