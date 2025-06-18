@@ -24,6 +24,21 @@ class MockBankAccountRepository implements BankAccountRepository {
     ),
   ];
 
+  static final List<AccountState> _states = [
+    AccountState(
+      id: 1,
+      name: 'Основной счёт',
+      balance: '1000.00',
+      currency: 'RUB',
+    ),
+    AccountState(
+      id: 2,
+      name: 'Накопительный счёт',
+      balance: '50000.00',
+      currency: 'USD',
+    ),
+  ];
+
   @override
   Future<List<BankAccount>> getAllAccounts() async {
     await Future.delayed(const Duration(milliseconds: 500));
@@ -112,6 +127,7 @@ class MockBankAccountRepository implements BankAccountRepository {
   Future<AccountHistory> getAccountHistory(int id) async {
     await Future.delayed(const Duration(milliseconds: 500));
     final account = _accounts.firstWhere((acc) => acc.id == id);
+    final state = _states.firstWhere((acc) => acc.id == id);
 
     return AccountHistory(
       accountId: account.id,
@@ -123,8 +139,8 @@ class MockBankAccountRepository implements BankAccountRepository {
           id: 1,
           accountId: account.id,
           changeType: 'CREATION',
-          previousState: account.copyWith(balance: '0.00'),
-          newState: account,
+          previousState: state.copyWith(balance: '0.00'),
+          newState: state,
           changeTimestamp: account.createdAt,
           createdAt: account.createdAt,
         ),
