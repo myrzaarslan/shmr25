@@ -53,6 +53,96 @@ class MockTransactionRepository implements TransactionRepository {
       createdAt: DateTime.now().subtract(const Duration(hours: 2)),
       updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
     ),
+    TransactionWithDetails(
+      id: 3,
+      account: BankAccount(
+        id: 1,
+        userId: 1,
+        name: 'Основной счёт',
+        balance: '150000.00',
+        currency: 'RUB',
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        updatedAt: DateTime.now(),
+      ),
+      category: const Category(id: 6, name: 'Транспорт', emoji: '🚗', isIncome: false, backgroundColor: 0xFFCFE8A9),
+      amount: '350.00',
+      transactionDate: DateTime.now().subtract(const Duration(hours: 5)),
+      comment: 'Такси',
+      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+      updatedAt: DateTime.now().subtract(const Duration(hours: 5)),
+    ),
+    TransactionWithDetails(
+      id: 4,
+      account: BankAccount(
+        id: 1,
+        userId: 1,
+        name: 'Основной счёт',
+        balance: '150000.00',
+        currency: 'RUB',
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        updatedAt: DateTime.now(),
+      ),
+      category: const Category(id: 2, name: 'Подработка', emoji: '💻', isIncome: true, backgroundColor: 0xFF80D2C4),
+      amount: '15000.00',
+      transactionDate: DateTime.now().subtract(const Duration(days: 3)),
+      comment: 'Фриланс проект',
+      createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      updatedAt: DateTime.now().subtract(const Duration(days: 3)),
+    ),
+    TransactionWithDetails(
+      id: 5,
+      account: BankAccount(
+        id: 1,
+        userId: 1,
+        name: 'Основной счёт',
+        balance: '150000.00',
+        currency: 'RUB',
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        updatedAt: DateTime.now(),
+      ),
+      category: const Category(id: 7, name: 'Развлечения', emoji: '🎬', isIncome: false, backgroundColor: 0xFF80D2C4),
+      amount: '1200.00',
+      transactionDate: DateTime.now().subtract(const Duration(days: 4)),
+      comment: 'Кино',
+      createdAt: DateTime.now().subtract(const Duration(days: 4)),
+      updatedAt: DateTime.now().subtract(const Duration(days: 4)),
+    ),
+    TransactionWithDetails(
+      id: 6,
+      account: BankAccount(
+        id: 1,
+        userId: 1,
+        name: 'Основной счёт',
+        balance: '150000.00',
+        currency: 'RUB',
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        updatedAt: DateTime.now(),
+      ),
+      category: const Category(id: 12, name: 'Спорт', emoji: '🏋️', isIncome: false, backgroundColor: 0xFF81A2CA),
+      amount: '2500.00',
+      transactionDate: DateTime.now().subtract(const Duration(days: 10)),
+      comment: 'Абонемент в зал',
+      createdAt: DateTime.now().subtract(const Duration(days: 10)),
+      updatedAt: DateTime.now().subtract(const Duration(days: 10)),
+    ),
+    TransactionWithDetails(
+      id: 7,
+      account: BankAccount(
+        id: 1,
+        userId: 1,
+        name: 'Основной счёт',
+        balance: '150000.00',
+        currency: 'RUB',
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        updatedAt: DateTime.now(),
+      ),
+      category: const Category(id: 4, name: 'Подарки', emoji: '🎁', isIncome: true, backgroundColor: 0xFFE8A9A9),
+      amount: '5000.00',
+      transactionDate: DateTime.now(),
+      comment: 'Подарок на день рождения',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    )
   ];
 
   @override
@@ -114,17 +204,13 @@ class MockTransactionRepository implements TransactionRepository {
   }) async {
     await Future.delayed(const Duration(milliseconds: 600));
 
-    final now = DateTime.now();
-    final start = startDate ?? DateTime(now.year, now.month, 1);
-    final end = endDate ?? DateTime(now.year, now.month + 1, 0);
+    final start = startDate ?? DateTime.now().subtract(const Duration(days: 30));
+    final end = endDate ?? DateTime.now();
 
-    return _transactions
-        .where(
-          (transaction) =>
-              transaction.account.id == accountId &&
-              transaction.transactionDate.isAfter(start) &&
-              transaction.transactionDate.isBefore(end),
-        )
-        .toList();
+    return _transactions.where((transaction) {
+      return transaction.account.id == accountId &&
+          !transaction.transactionDate.isBefore(start) &&
+          !transaction.transactionDate.isAfter(end);
+    }).toList();
   }
 }

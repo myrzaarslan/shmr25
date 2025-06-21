@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import '../../domain/models/transaction.dart';
-import '../../domain/repositories/transaction_repository.dart';
 import '../../data/repositories/mock_transaction_repository.dart';
 import '../widgets/app_bar.dart';
 
@@ -192,21 +190,31 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
                     itemCount: state.transactions.length,
                     itemBuilder: (_, index) {
                       final t = state.transactions[index];
+                      final amountColor = widget.isIncome ? Colors.green : Colors.red;
                       return ListTile(
-                        title: Text('${t.category.emoji} ${t.category.name}'),
+                        leading: Text(
+                          t.category.emoji,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                        title: Text(t.category.name),
                         subtitle: Text(t.comment ?? ''),
                         trailing: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              '${widget.isIncome ? '+' : '-'} ${t.amount} ₽',
+                              '${widget.isIncome ? '+' : '-'} ${NumberFormat.currency(locale: 'ru_RU', symbol: '₽').format(double.parse(t.amount))}',
                               style: TextStyle(
-                                color: widget.isIncome ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold,
+                                color: amountColor,
                               ),
                             ),
                             Text(
                               DateFormat('dd.MM.yyyy HH:mm').format(t.transactionDate),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
