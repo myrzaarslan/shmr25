@@ -9,6 +9,7 @@ abstract class Category with _$Category {
     required int id,
     required String name,
     required String emoji,
+    required int backgroundColor,
     required bool isIncome,
   }) = _Category;
 
