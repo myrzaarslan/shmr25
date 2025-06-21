@@ -110,7 +110,7 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
             'assets/icons/arrow.svg',
             width: 24,
             height: 24,
-            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -120,57 +120,78 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
               'assets/icons/analysis.svg',
               width: 24,
               height: 24,
-              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
             ),
             onPressed: () {
-              // TODO: Implement analysis functionality
+              // TODO
             },
           ),
         ],
       ),
       body: Column(
         children: [
-          ListTile(
-            title: const Text('Начало'),
-            trailing: Text(DateFormat('dd.MM.yyyy').format(startDate)),
-            onTap: () => _pickDate(isStart: true),
-          ),
-          ListTile(
-            title: const Text('Конец'),
-            trailing: Text(DateFormat('dd.MM.yyyy').format(endDate)),
-            onTap: () => _pickDate(isStart: false),
-          ),
-          BlocBuilder<TransactionBloc, TransactionState>(
-            builder: (context, state) {
-              if (state is TransactionLoaded) {
-                return Column(
-                  children: [
-                    ListTile(
-                      title: const Text('Сортировка'),
-                      trailing: DropdownButton<String>(
-                        value: selectedSort,
-                        items: ['По дате', 'По сумме']
-                            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                            .toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              selectedSort = value;
-                            });
-                            _loadTransactions();
-                          }
-                        },
-                      ),
-                    ),
-                    ListTile(
-                      title: const Text('Сумма'),
-                      trailing: Text('${state.totalAmount.toStringAsFixed(2)} ₽'),
-                    ),
-                  ],
-                );
-              }
-              return const SizedBox.shrink();
-            },
+          Container(
+            color: const Color(0xFFE8F5E9),
+            child: Column(
+              children: [
+                ListTile(
+                  title: const Text('Начало'),
+                  trailing: Text(
+                    DateFormat('dd.MM.yyyy').format(startDate),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  onTap: () => _pickDate(isStart: true),
+                ),
+                ListTile(
+                  title: const Text('Конец'),
+                  trailing: Text(
+                    DateFormat('dd.MM.yyyy').format(endDate),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  onTap: () => _pickDate(isStart: false),
+                ),
+                BlocBuilder<TransactionBloc, TransactionState>(
+                  builder: (context, state) {
+                    if (state is TransactionLoaded) {
+                      return Column(
+                        children: [
+                          ListTile(
+                            title: const Text('Сортировка'),
+                            trailing: DropdownButton<String>(
+                              value: selectedSort,
+                              items: ['По дате', 'По сумме']
+                                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                                  .toList(),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    selectedSort = value;
+                                  });
+                                  _loadTransactions();
+                                }
+                              },
+                            ),
+                          ),
+                          ListTile(
+                            title: const Text('Сумма'),
+                            trailing: Text(
+                              '${state.totalAmount.toStringAsFixed(2)} ₽',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
+            ),
           ),
           const Divider(),
           Expanded(

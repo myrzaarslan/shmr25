@@ -51,9 +51,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               'assets/icons/analysis.svg',
               width: 24,
               height: 24,
-              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
             ),
-            onPressed: () {
+            onPressed: () { 
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -128,7 +128,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             return TransactionListItem(
                               transaction: state.transactions[index],
                               onTap: () {
-                                // TODO: Navigate to transaction details
+                                // TODO
                               },
                             );
                           },
