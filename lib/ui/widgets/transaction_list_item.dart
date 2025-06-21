@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../domain/models/transaction.dart';
 
 class TransactionListItem extends StatelessWidget {
@@ -9,43 +10,28 @@ class TransactionListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = transaction.category.isIncome ? Colors.green : Colors.red;
+
     return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: transaction.category.isIncome
-              ? Colors.green.withOpacity(0.1)
-              : Colors.red.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Center(
-          child: Text(
-            transaction.category.emoji,
-            style: const TextStyle(fontSize: 20),
-          ),
+      leading: CircleAvatar(
+        backgroundColor: Color(transaction.category.backgroundColor),
+        child: Text(
+          transaction.category.emoji,
+          style: const TextStyle(fontSize: 20),
         ),
       ),
       title: Text(
         transaction.category.name,
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
       ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _formatDateTime(transaction.transactionDate),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-          if (transaction.comment != null && transaction.comment!.isNotEmpty)
-            Text(
+      subtitle: transaction.comment != null && transaction.comment!.isNotEmpty
+          ? Text(
               transaction.comment!,
               style: const TextStyle(fontSize: 14, color: Colors.grey),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-            ),
-        ],
-      ),
+            )
+          : null,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -54,28 +40,21 @@ class TransactionListItem extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: transaction.category.isIncome ? Colors.green : Colors.red,
+              color: color,
             ),
           ),
-          const SizedBox(width: 8),
-          const Icon(Icons.chevron_right, color: Colors.grey),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
         ],
       ),
       onTap: onTap,
     );
   }
 
-  String _formatDateTime(DateTime date) {
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    final year = date.year.toString();
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '$day.$month.$year $hour:$minute';
-  }
-
   String _formatAmount(String amount, bool isIncome) {
     final parsed = double.tryParse(amount) ?? 0.0;
-    return '${parsed.toStringAsFixed(2)} ₽';
+    final format = NumberFormat.currency(locale: 'ru_RU', symbol: '₽');
+    final formatted = format.format(parsed);
+    return '${isIncome ? '+' : '-'}${formatted}';
   }
 }

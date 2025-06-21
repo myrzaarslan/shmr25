@@ -1,5 +1,7 @@
+import 'package:finance_app/ui/widgets/app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import '../../bloc/transaction/transaction_bloc.dart';
 import '../../bloc/transaction/transaction_event.dart';
 import '../../bloc/transaction/transaction_state.dart';
@@ -41,13 +43,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isIncome ? 'Доходы сегодня' : 'Расходы сегодня'),
-        backgroundColor: const Color(0xFF2ECC71),
-        foregroundColor: Colors.white,
+      appBar: Appbar(
+        title: widget.isIncome ? 'Доходы сегодня' : 'Расходы сегодня',
         actions: [
           IconButton(
-            icon: const Icon(Icons.history),
+            icon: SvgPicture.asset(
+              'assets/icons/analysis.svg',
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+            ),
             onPressed: () {
               Navigator.push(
                 context,
@@ -182,7 +187,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   String _formatRuble(double value) {
-    return '${value.toStringAsFixed(2)} ₽';
+    return '${value.toStringAsFixed(0)} ₽';
   }
 
   Widget _buildEmptyState() {
