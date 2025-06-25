@@ -1,0 +1,1 @@
+enum SortField { amount, date }

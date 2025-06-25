@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:finance_app/constants/assets.dart';
 
 class AddTransactionFab extends StatelessWidget {
   final bool isIncome;
@@ -24,7 +25,7 @@ class AddTransactionFab extends StatelessWidget {
       hoverElevation: 0,
       highlightElevation: 0,
       child: SvgPicture.asset(
-        'assets/icons/plus.svg',
+        AppAssets.plusIcon,
         width: 24,
         height: 24,
         colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
