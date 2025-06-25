@@ -1,4 +1,1 @@
-class SortFields {
-  static const amount = 'amount';
-  static const date = 'date';
-}
+enum SortField { amount, date }

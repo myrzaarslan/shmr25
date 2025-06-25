@@ -1,3 +1,5 @@
+import 'package:finance_app/constants/sort_field.dart';
+
 import '../../../domain/models/transaction.dart';
 
 abstract class TransactionState {}
@@ -9,18 +11,18 @@ class TransactionLoading extends TransactionState {}
 class TransactionLoaded extends TransactionState {
   final List<TransactionWithDetails> transactions;
   final double totalAmount;
-  final String sortBy;
+  final SortField sortBy;
 
   TransactionLoaded({
     required this.transactions,
     required this.totalAmount,
-    this.sortBy = 'date',
+    this.sortBy = SortField.date,
   });
 
   TransactionLoaded copyWith({
     List<TransactionWithDetails>? transactions,
     double? totalAmount,
-    String? sortBy,
+    final SortField? sortBy,
   }) {
     return TransactionLoaded(
       transactions: transactions ?? this.transactions,

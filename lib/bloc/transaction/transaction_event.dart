@@ -1,4 +1,5 @@
 import '../../../domain/models/transaction.dart';
+import '../../constants/sort_field.dart';
 
 abstract class TransactionEvent {}
 
@@ -23,14 +24,14 @@ class LoadTransactionsForPeriod extends TransactionEvent {
   final bool isIncome;
   final DateTime startDate;
   final DateTime endDate;
-  final String sortBy;
+  final SortField sortBy;
 
   LoadTransactionsForPeriod({
     required this.accountId,
     required this.isIncome,
     required this.startDate,
     required this.endDate,
-    this.sortBy = 'date',
+    this.sortBy = SortField.date,
   });
 
   @override
