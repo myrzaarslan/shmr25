@@ -1,12 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:finance_app/ui/widgets/app_bar.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:finance_app/ui/screens/account_edit_page.dart';
 
-class AccountPage extends StatelessWidget {
+class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
 
   @override
+  State<AccountPage> createState() => _AccountPageState();
+}
+
+class _AccountPageState extends State<AccountPage> {
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Счет')),
+      appBar: Appbar(
+        title: 'Мой счет',
+        actions: [
+          IconButton(
+            icon: SvgPicture.asset(
+              'assets/icons/edit.svg',
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(
+                Colors.black,
+                BlendMode.srcIn,
+              ),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AccountEditScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Center(child: Text('Список счетов')),
     );
   }
