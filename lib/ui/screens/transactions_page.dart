@@ -121,11 +121,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           if (state is TransactionLoaded) {
             return Column(
               children: [
-                _buildTotalSection(state.totalAmount),
+                _TotalSection(
+                  totalAmount: state.totalAmount,
+                  isIncome: widget.isIncome,
+                ),
                 const Divider(height: 1),
                 Expanded(
                   child: state.transactions.isEmpty
-                      ? _buildEmptyState()
+                      ? _EmptyState(isIncome: widget.isIncome)
                       : ListView.builder(
                           itemCount: state.transactions.length,
                           itemBuilder: (context, index) {
@@ -142,7 +145,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             );
           }
 
-          return _buildEmptyState();
+          return _EmptyState(isIncome: widget.isIncome);
         },
       ),
       floatingActionButton: AddTransactionFab(
@@ -165,8 +168,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ),
     );
   }
+}
 
-  Widget _buildTotalSection(double totalAmount) {
+class _TotalSection extends StatelessWidget {
+  final double totalAmount;
+  final bool isIncome;
+
+  const _TotalSection({required this.totalAmount, required this.isIncome});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       color: Colors.white,
@@ -178,37 +189,38 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
           Text(
-            _formatRuble(totalAmount),
+            '${totalAmount.toStringAsFixed(0)} ₽',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: widget.isIncome ? Colors.green : Colors.red,
+              color: isIncome ? Colors.green : Colors.red,
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  String _formatRuble(double value) {
-    return '${value.toStringAsFixed(0)} ₽';
-  }
+class _EmptyState extends StatelessWidget {
+  final bool isIncome;
 
-  Widget _buildEmptyState() {
+  const _EmptyState({required this.isIncome});
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            widget.isIncome ? Icons.trending_up : Icons.trending_down,
+            isIncome ? Icons.trending_up : Icons.trending_down,
             size: 64,
             color: Colors.grey,
           ),
           const SizedBox(height: 16),
           Text(
-            widget.isIncome
-                ? 'Нет доходов за сегодня'
-                : 'Нет расходов за сегодня',
+            isIncome ? 'Нет доходов за сегодня' : 'Нет расходов за сегодня',
             style: Theme.of(
               context,
             ).textTheme.headlineSmall?.copyWith(color: Colors.grey),
