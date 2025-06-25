@@ -9,6 +9,7 @@ import '../widgets/transaction_list_item.dart';
 import '../widgets/add_transaction_fab.dart';
 import 'add_transaction_page.dart';
 import 'transaction_history_page.dart';
+import '../../constants/assets.dart';
 
 class TransactionsScreen extends StatefulWidget {
   final bool isIncome;
@@ -48,12 +49,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         actions: [
           IconButton(
             icon: SvgPicture.asset(
-              'assets/icons/analysis.svg',
+              AppAssets.analysisIcon,
               width: 24,
               height: 24,
-              colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+              colorFilter: const ColorFilter.mode(
+                Colors.black,
+                BlendMode.srcIn,
+              ),
             ),
-            onPressed: () { 
+            onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(

@@ -8,6 +8,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import '../../data/repositories/mock_transaction_repository.dart';
 import '../widgets/app_bar.dart';
+import '../../constants/sort_field.dart';
+import '../../constants/assets.dart';
 
 class TransactionHistoryScreen extends StatelessWidget {
   final bool isIncome;
@@ -26,10 +28,7 @@ class TransactionHistoryScreen extends StatelessWidget {
         transactionRepository: MockTransactionRepository(),
         categoryRepository: MockCategoryRepository(),
       ),
-      child: TransactionHistoryView(
-        isIncome: isIncome,
-        accountId: accountId,
-      ),
+      child: TransactionHistoryView(isIncome: isIncome, accountId: accountId),
     );
   }
 }
@@ -64,14 +63,14 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
 
   void _loadTransactions() {
     context.read<TransactionBloc>().add(
-          LoadTransactionsForPeriod(
-            accountId: widget.accountId,
-            isIncome: widget.isIncome,
-            startDate: startDate,
-            endDate: endDate,
-            sortBy: selectedSort == 'По дате' ? 'date' : 'amount',
-          ),
-        );
+      LoadTransactionsForPeriod(
+        accountId: widget.accountId,
+        isIncome: widget.isIncome,
+        startDate: startDate,
+        endDate: endDate,
+        sortBy: selectedSort == 'По дате' ? SortField.date : SortField.amount,
+      ),
+    );
   }
 
   Future<void> _pickDate({required bool isStart}) async {
@@ -117,10 +116,13 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
         actions: [
           IconButton(
             icon: SvgPicture.asset(
-              'assets/icons/analysis.svg',
+              AppAssets.backArrow,
               width: 24,
               height: 24,
-              colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+              colorFilter: const ColorFilter.mode(
+                Colors.black,
+                BlendMode.srcIn,
+              ),
             ),
             onPressed: () {
               // TODO
@@ -138,7 +140,10 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
                   title: const Text('Начало'),
                   trailing: Text(
                     DateFormat('dd.MM.yyyy').format(startDate),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   onTap: () => _pickDate(isStart: true),
                 ),
@@ -146,7 +151,10 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
                   title: const Text('Конец'),
                   trailing: Text(
                     DateFormat('dd.MM.yyyy').format(endDate),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   onTap: () => _pickDate(isStart: false),
                 ),
@@ -160,7 +168,12 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
                             trailing: DropdownButton<String>(
                               value: selectedSort,
                               items: ['По дате', 'По сумме']
-                                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                                  .map(
+                                    (e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(e),
+                                    ),
+                                  )
                                   .toList(),
                               style: const TextStyle(
                                 fontSize: 16,
@@ -181,7 +194,10 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
                             title: const Text('Сумма'),
                             trailing: Text(
                               '${state.totalAmount.toStringAsFixed(2)} ₽',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ],
@@ -205,13 +221,17 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
                 }
                 if (state is TransactionLoaded) {
                   if (state.transactions.isEmpty) {
-                    return const Center(child: Text('Нет транзакций за период'));
+                    return const Center(
+                      child: Text('Нет транзакций за период'),
+                    );
                   }
                   return ListView.builder(
                     itemCount: state.transactions.length,
                     itemBuilder: (_, index) {
                       final t = state.transactions[index];
-                      final amountColor = widget.isIncome ? Colors.green : Colors.red;
+                      final amountColor = widget.isIncome
+                          ? Colors.green
+                          : Colors.red;
                       return ListTile(
                         leading: Text(
                           t.category.emoji,
@@ -231,7 +251,9 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
                               ),
                             ),
                             Text(
-                              DateFormat('dd.MM.yyyy HH:mm').format(t.transactionDate),
+                              DateFormat(
+                                'dd.MM.yyyy HH:mm',
+                              ).format(t.transactionDate),
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
