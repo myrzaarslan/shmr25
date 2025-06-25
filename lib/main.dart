@@ -21,19 +21,24 @@ class FinanceApp extends StatelessWidget {
         RepositoryProvider(create: (_) => MockTransactionRepository()),
         RepositoryProvider(create: (_) => MockBankAccountRepository()),
       ],
-      child: MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create: (context) => TransactionBloc(
-              transactionRepository: context.read<MockTransactionRepository>(),
-              categoryRepository: context.read<MockCategoryRepository>(),
+      child: Builder(
+        builder: (context) {
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) => TransactionBloc(
+                  transactionRepository: context
+                      .read<MockTransactionRepository>(),
+                  categoryRepository: context.read<MockCategoryRepository>(),
+                ),
+              ),
+            ],
+            child: MaterialApp.router(
+              routerConfig: goRouter,
+              debugShowCheckedModeBanner: false,
             ),
-          ),
-        ],
-        child: MaterialApp.router(
-          routerConfig: goRouter,
-          debugShowCheckedModeBanner: false,
-        ),
+          );
+        },
       ),
     );
   }
