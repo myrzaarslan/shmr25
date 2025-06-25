@@ -82,15 +82,13 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
     );
 
     if (picked != null) {
-      setState(() {
-        if (isStart) {
-          startDate = picked;
-          if (startDate.isAfter(endDate)) endDate = startDate;
-        } else {
-          endDate = picked;
-          if (endDate.isBefore(startDate)) startDate = endDate;
-        }
-      });
+      if (isStart) {
+        startDate = picked;
+        if (startDate.isAfter(endDate)) endDate = startDate;
+      } else {
+        endDate = picked;
+        if (endDate.isBefore(startDate)) startDate = endDate;
+      }
       _loadTransactions();
     }
   }
