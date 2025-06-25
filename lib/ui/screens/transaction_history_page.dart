@@ -8,6 +8,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import '../../data/repositories/mock_transaction_repository.dart';
 import '../widgets/app_bar.dart';
+import '../../constants/sort_field.dart';
+import '../../constants/assets.dart';
 
 class TransactionHistoryScreen extends StatelessWidget {
   final bool isIncome;
@@ -66,7 +68,7 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
         isIncome: widget.isIncome,
         startDate: startDate,
         endDate: endDate,
-        sortBy: selectedSort == 'По дате' ? 'date' : 'amount',
+        sortBy: selectedSort == 'По дате' ? SortField.date : SortField.amount,
       ),
     );
   }
@@ -80,19 +82,13 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
     );
 
     if (picked != null) {
-      setState(() {
-        if (isStart) {
-          startDate = picked;
-          if (startDate.isAfter(endDate)) {
-            endDate = startDate;
-          }
-        } else {
-          endDate = picked;
-          if (endDate.isBefore(startDate)) {
-            startDate = endDate;
-          }
-        }
-      });
+      if (isStart) {
+        startDate = picked;
+        if (startDate.isAfter(endDate)) endDate = startDate;
+      } else {
+        endDate = picked;
+        if (endDate.isBefore(startDate)) startDate = endDate;
+      }
       _loadTransactions();
     }
   }
@@ -104,171 +100,161 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
         title: widget.isIncome ? 'История доходов' : 'История расходов',
         leading: IconButton(
           icon: SvgPicture.asset(
-            'assets/icons/arrow.svg',
+            AppAssets.backArrow,
             width: 24,
             height: 24,
             colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: [
-          IconButton(
-            icon: SvgPicture.asset(
-              'assets/icons/analysis.svg',
-              width: 24,
-              height: 24,
-              colorFilter: const ColorFilter.mode(
-                Colors.black,
-                BlendMode.srcIn,
-              ),
-            ),
-            onPressed: () {
-              // TODO
+      ),
+      body: Column(
+        children: [
+          _TransactionFilterPanel(
+            startDate: startDate,
+            endDate: endDate,
+            selectedSort: selectedSort,
+            isIncome: widget.isIncome,
+            onStartDateTap: () => _pickDate(isStart: true),
+            onEndDateTap: () => _pickDate(isStart: false),
+            onSortChange: (value) {
+              setState(() => selectedSort = value);
+              _loadTransactions();
+            },
+          ),
+          const Divider(),
+          Expanded(child: _TransactionListView(isIncome: widget.isIncome)),
+        ],
+      ),
+    );
+  }
+}
+
+class _TransactionFilterPanel extends StatelessWidget {
+  final DateTime startDate;
+  final DateTime endDate;
+  final String selectedSort;
+  final VoidCallback onStartDateTap;
+  final VoidCallback onEndDateTap;
+  final ValueChanged<String> onSortChange;
+  final bool isIncome;
+
+  const _TransactionFilterPanel({
+    required this.startDate,
+    required this.endDate,
+    required this.selectedSort,
+    required this.onStartDateTap,
+    required this.onEndDateTap,
+    required this.onSortChange,
+    required this.isIncome,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFE8F5E9),
+      child: Column(
+        children: [
+          ListTile(
+            title: const Text('Начало'),
+            trailing: Text(DateFormat('dd.MM.yyyy').format(startDate)),
+            onTap: onStartDateTap,
+          ),
+          ListTile(
+            title: const Text('Конец'),
+            trailing: Text(DateFormat('dd.MM.yyyy').format(endDate)),
+            onTap: onEndDateTap,
+          ),
+          BlocBuilder<TransactionBloc, TransactionState>(
+            builder: (context, state) {
+              if (state is! TransactionLoaded) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  ListTile(
+                    title: const Text('Сортировка'),
+                    trailing: DropdownButton<String>(
+                      value: selectedSort,
+                      items: ['По дате', 'По сумме']
+                          .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(e)),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) onSortChange(value);
+                      },
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Сумма'),
+                    trailing: Text(
+                      '${state.totalAmount.toStringAsFixed(2)} ₽',
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              );
             },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            color: const Color(0xFFE8F5E9),
-            child: Column(
-              children: [
-                ListTile(
-                  title: const Text('Начало'),
-                  trailing: Text(
-                    DateFormat('dd.MM.yyyy').format(startDate),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+    );
+  }
+}
+
+class _TransactionListView extends StatelessWidget {
+  final bool isIncome;
+
+  const _TransactionListView({required this.isIncome});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TransactionBloc, TransactionState>(
+      builder: (context, state) {
+        if (state is TransactionLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is TransactionError) {
+          return Center(child: Text(state.message));
+        }
+        if (state is TransactionLoaded) {
+          if (state.transactions.isEmpty) {
+            return const Center(child: Text('Нет транзакций за период'));
+          }
+          return ListView.builder(
+            itemCount: state.transactions.length,
+            itemBuilder: (_, index) {
+              final t = state.transactions[index];
+              final amountColor = isIncome ? Colors.green : Colors.red;
+              return ListTile(
+                leading: Text(
+                  t.category.emoji,
+                  style: const TextStyle(fontSize: 24),
+                ),
+                title: Text(t.category.name),
+                subtitle: Text(t.comment ?? ''),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${isIncome ? '+' : '-'} ${NumberFormat.currency(locale: 'ru_RU', symbol: '₽').format(double.parse(t.amount))}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: amountColor,
+                      ),
                     ),
-                  ),
-                  onTap: () => _pickDate(isStart: true),
-                ),
-                ListTile(
-                  title: const Text('Конец'),
-                  trailing: Text(
-                    DateFormat('dd.MM.yyyy').format(endDate),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                    Text(
+                      DateFormat('dd.MM.yyyy HH:mm').format(t.transactionDate),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
-                  ),
-                  onTap: () => _pickDate(isStart: false),
+                  ],
                 ),
-                BlocBuilder<TransactionBloc, TransactionState>(
-                  builder: (context, state) {
-                    if (state is TransactionLoaded) {
-                      return Column(
-                        children: [
-                          ListTile(
-                            title: const Text('Сортировка'),
-                            trailing: DropdownButton<String>(
-                              value: selectedSort,
-                              items: ['По дате', 'По сумме']
-                                  .map(
-                                    (e) => DropdownMenuItem(
-                                      value: e,
-                                      child: Text(e),
-                                    ),
-                                  )
-                                  .toList(),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                              ),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    selectedSort = value;
-                                  });
-                                  _loadTransactions();
-                                }
-                              },
-                            ),
-                          ),
-                          ListTile(
-                            title: const Text('Сумма'),
-                            trailing: Text(
-                              '${state.totalAmount.toStringAsFixed(2)} ₽',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
-            ),
-          ),
-          const Divider(),
-          Expanded(
-            child: BlocBuilder<TransactionBloc, TransactionState>(
-              builder: (context, state) {
-                if (state is TransactionLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (state is TransactionError) {
-                  return Center(child: Text(state.message));
-                }
-                if (state is TransactionLoaded) {
-                  if (state.transactions.isEmpty) {
-                    return const Center(
-                      child: Text('Нет транзакций за период'),
-                    );
-                  }
-                  return ListView.builder(
-                    itemCount: state.transactions.length,
-                    itemBuilder: (_, index) {
-                      final t = state.transactions[index];
-                      final amountColor = widget.isIncome
-                          ? Colors.green
-                          : Colors.red;
-                      return ListTile(
-                        leading: Text(
-                          t.category.emoji,
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                        title: Text(t.category.name),
-                        subtitle: Text(t.comment ?? ''),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '${widget.isIncome ? '+' : '-'} ${NumberFormat.currency(locale: 'ru_RU', symbol: '₽').format(double.parse(t.amount))}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: amountColor,
-                              ),
-                            ),
-                            Text(
-                              DateFormat(
-                                'dd.MM.yyyy HH:mm',
-                              ).format(t.transactionDate),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-          ),
-        ],
-      ),
+              );
+            },
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }

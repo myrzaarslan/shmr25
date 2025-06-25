@@ -4,6 +4,7 @@ import '../../../domain/repositories/category_repository.dart';
 import '../../domain/models/transaction.dart';
 import 'transaction_event.dart';
 import 'transaction_state.dart';
+import '../../constants/sort_field.dart';
 
 class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   final TransactionRepository _transactionRepository;
@@ -92,11 +93,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           .toList();
 
       // Сортировка
-      if (event.sortBy == 'amount') {
+      if (event.sortBy == SortField.amount) {
         filteredTransactions.sort(
           (a, b) => double.parse(b.amount).compareTo(double.parse(a.amount)),
         );
-      } else {
+      } else if (event.sortBy == SortField.date) {
         filteredTransactions.sort(
           (a, b) => b.transactionDate.compareTo(a.transactionDate),
         );
