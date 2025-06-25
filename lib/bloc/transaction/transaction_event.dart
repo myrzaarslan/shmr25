@@ -10,11 +10,9 @@ class LoadTransactionsForToday extends TransactionEvent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
       other is LoadTransactionsForToday &&
-          runtimeType == other.runtimeType &&
-          accountId == other.accountId &&
-          isIncome == other.isIncome;
+      accountId == other.accountId &&
+      isIncome == other.isIncome;
 
   @override
   int get hashCode => accountId.hashCode ^ isIncome.hashCode;
@@ -37,14 +35,12 @@ class LoadTransactionsForPeriod extends TransactionEvent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
       other is LoadTransactionsForPeriod &&
-          runtimeType == other.runtimeType &&
-          accountId == other.accountId &&
-          isIncome == other.isIncome &&
-          startDate == other.startDate &&
-          endDate == other.endDate &&
-          sortBy == other.sortBy;
+      accountId == other.accountId &&
+      isIncome == other.isIncome &&
+      startDate == other.startDate &&
+      endDate == other.endDate &&
+      sortBy == other.sortBy;
 
   @override
   int get hashCode =>
@@ -62,10 +58,7 @@ class AddTransaction extends TransactionEvent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AddTransaction &&
-          runtimeType == other.runtimeType &&
-          request == other.request;
+      other is AddTransaction && request == other.request;
 
   @override
   int get hashCode => request.hashCode;
@@ -79,11 +72,7 @@ class UpdateTransaction extends TransactionEvent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is UpdateTransaction &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          request == other.request;
+      other is UpdateTransaction && id == other.id && request == other.request;
 
   @override
   int get hashCode => id.hashCode ^ request.hashCode;
@@ -96,10 +85,7 @@ class DeleteTransaction extends TransactionEvent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DeleteTransaction &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is DeleteTransaction && id == other.id;
 
   @override
   int get hashCode => id.hashCode;
