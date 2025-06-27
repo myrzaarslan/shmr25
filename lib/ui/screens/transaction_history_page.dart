@@ -122,7 +122,6 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
               _loadTransactions();
             },
           ),
-          const Divider(),
           Expanded(child: _TransactionListView(isIncome: widget.isIncome)),
         ],
       ),

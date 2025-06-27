@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:finance_app/ui/widgets/app_bar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:finance_app/ui/screens/account_edit_page.dart';
+import 'package:finance_app/constants/assets.dart';
+import 'package:finance_app/ui/widgets/account_list_item.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -19,7 +21,7 @@ class _AccountPageState extends State<AccountPage> {
         actions: [
           IconButton(
             icon: SvgPicture.asset(
-              'assets/icons/edit.svg',
+              AppAssets.editIcon,
               width: 24,
               height: 24,
               colorFilter: const ColorFilter.mode(
@@ -36,7 +38,7 @@ class _AccountPageState extends State<AccountPage> {
           ),
         ],
       ),
-      body: Center(child: Text('Список счетов')),
+      body: Column(children: [AccountListItem()]),
     );
   }
 }
