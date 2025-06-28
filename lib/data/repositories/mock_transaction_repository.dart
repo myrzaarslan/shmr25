@@ -64,7 +64,13 @@ class MockTransactionRepository implements TransactionRepository {
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
         updatedAt: DateTime.now(),
       ),
-      category: const Category(id: 6, name: 'Транспорт', emoji: '🚗', isIncome: false, backgroundColor: 0xFFCFE8A9),
+      category: const Category(
+        id: 6,
+        name: 'Транспорт',
+        emoji: '🚗',
+        isIncome: false,
+        backgroundColor: 0xFFCFE8A9,
+      ),
       amount: '350.00',
       transactionDate: DateTime.now().subtract(const Duration(hours: 5)),
       comment: 'Такси',
@@ -82,7 +88,13 @@ class MockTransactionRepository implements TransactionRepository {
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
         updatedAt: DateTime.now(),
       ),
-      category: const Category(id: 2, name: 'Подработка', emoji: '💻', isIncome: true, backgroundColor: 0xFF80D2C4),
+      category: const Category(
+        id: 2,
+        name: 'Подработка',
+        emoji: '💻',
+        isIncome: true,
+        backgroundColor: 0xFF80D2C4,
+      ),
       amount: '15000.00',
       transactionDate: DateTime.now().subtract(const Duration(days: 3)),
       comment: 'Фриланс проект',
@@ -100,7 +112,13 @@ class MockTransactionRepository implements TransactionRepository {
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
         updatedAt: DateTime.now(),
       ),
-      category: const Category(id: 7, name: 'Развлечения', emoji: '🎬', isIncome: false, backgroundColor: 0xFF80D2C4),
+      category: const Category(
+        id: 7,
+        name: 'Развлечения',
+        emoji: '🎬',
+        isIncome: false,
+        backgroundColor: 0xFF80D2C4,
+      ),
       amount: '1200.00',
       transactionDate: DateTime.now().subtract(const Duration(days: 4)),
       comment: 'Кино',
@@ -118,7 +136,13 @@ class MockTransactionRepository implements TransactionRepository {
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
         updatedAt: DateTime.now(),
       ),
-      category: const Category(id: 12, name: 'Спорт', emoji: '🏋️', isIncome: false, backgroundColor: 0xFF81A2CA),
+      category: const Category(
+        id: 12,
+        name: 'Спорт',
+        emoji: '🏋️',
+        isIncome: false,
+        backgroundColor: 0xFF81A2CA,
+      ),
       amount: '2500.00',
       transactionDate: DateTime.now().subtract(const Duration(days: 10)),
       comment: 'Абонемент в зал',
@@ -136,13 +160,19 @@ class MockTransactionRepository implements TransactionRepository {
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
         updatedAt: DateTime.now(),
       ),
-      category: const Category(id: 4, name: 'Подарки', emoji: '🎁', isIncome: true, backgroundColor: 0xFFE8A9A9),
+      category: const Category(
+        id: 4,
+        name: 'Подарки',
+        emoji: '🎁',
+        isIncome: true,
+        backgroundColor: 0xFFE8A9A9,
+      ),
       amount: '5000.00',
       transactionDate: DateTime.now(),
       comment: 'Подарок на день рождения',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
-    )
+    ),
   ];
 
   @override
@@ -204,7 +234,8 @@ class MockTransactionRepository implements TransactionRepository {
   }) async {
     await Future.delayed(const Duration(milliseconds: 600));
 
-    final start = startDate ?? DateTime.now().subtract(const Duration(days: 30));
+    final start =
+        startDate ?? DateTime.now().subtract(const Duration(days: 30));
     final end = endDate ?? DateTime.now();
 
     return _transactions.where((transaction) {
