@@ -7,6 +7,7 @@ import 'package:finance_app/constants/currency_field.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_app/cubit/currency/currency_cubit.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:shake_gesture/shake_gesture.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -26,39 +27,45 @@ class _AccountView extends StatefulWidget {
 
 class _AccountViewState extends State<_AccountView> {
   bool _hidden = false;
-  StreamSubscription? _sub;
-  static const double shakeThreshold = 18.0;
+  StreamSubscription? _accelSub;
+  bool _down = false;
   List<double> _lastAccel = [0, 0, 0];
+  static const double shakeThreshold = 15.0;
 
   @override
   void initState() {
     super.initState();
-    _sub = accelerometerEvents.listen(_onAccel);
+    _accelSub = accelerometerEvents.listen(_handleAccel);
   }
 
-  void _onAccel(AccelerometerEvent event) {
-    // Shake detection
+  void _handleAccel(AccelerometerEvent event) {
     final dx = event.x - _lastAccel[0];
     final dy = event.y - _lastAccel[1];
     final dz = event.z - _lastAccel[2];
     final delta = sqrt(dx * dx + dy * dy + dz * dz);
     _lastAccel = [event.x, event.y, event.z];
+    
     if (delta > shakeThreshold) {
       setState(() => _hidden = !_hidden);
     }
-    // Переворот экраном вниз (z < -8)
-    if (event.x < -4) {
-      if (!_hidden) setState(() => _hidden = true);
+    
+    if (event.z < -6) {
+      if (!_down) {
+        _down = true;
+        setState(() => _hidden = true);
+      }
+    } else if (event.z > 6) {
+      if (_down) {
+        _down = false;
+        setState(() => _hidden = false);
+      }
     }
-    // Переворот экраном вверх (z > 8)
-    if (event.x > 4) {
-      if (_hidden) setState(() => _hidden = false);
-    }
+    
   }
 
   @override
   void dispose() {
-    _sub?.cancel();
+    _accelSub?.cancel();
     super.dispose();
   }
 
@@ -68,6 +75,13 @@ class _AccountViewState extends State<_AccountView> {
       appBar: Appbar(
         title: 'Мой счет',
         actions: [
+          IconButton(
+            icon: Icon(_hidden ? Icons.visibility : Icons.visibility_off),
+            onPressed: () {
+              print('Manual toggle pressed');
+              setState(() => _hidden = !_hidden);
+            },
+          ),
           IconButton(
             icon: SvgPicture.asset(
               AppAssets.editIcon,
@@ -89,7 +103,7 @@ class _AccountViewState extends State<_AccountView> {
       ),
       body: Column(
         children: [
-          _AccountListItem(hidden: _hidden),
+          _AccountListItem(hidden: _hidden, onShake: () => setState(() => _hidden = !_hidden)),
           Divider(),
           _BalanceListItem(),
         ],
@@ -100,55 +114,59 @@ class _AccountViewState extends State<_AccountView> {
 
 class _AccountListItem extends StatelessWidget {
   final bool hidden;
-  const _AccountListItem({this.hidden = false});
+  final VoidCallback onShake;
+  const _AccountListItem({this.hidden = false, required this.onShake});
   @override
   Widget build(BuildContext context) {
     final backgroundColor = Colors.white;
     final avatar = "💰";
     final accountName = "Баланс";
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: backgroundColor,
-        child: Text(avatar, style: const TextStyle(fontSize: 20)),
-      ),
-      title: Text(accountName, style: const TextStyle(fontSize: 20)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
-            child: hidden
-                ? Container(
-                    key: const ValueKey('hidden'),
-                    width: 80,
-                    height: 24,
-                    alignment: Alignment.centerRight,
-                    child: Container(
-                      width: 60,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(8),
+    return ShakeGesture(
+      onShake: onShake,
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: backgroundColor,
+          child: Text(avatar, style: const TextStyle(fontSize: 20)),
+        ),
+        title: Text(accountName, style: const TextStyle(fontSize: 20)),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+              child: hidden
+                  ? Container(
+                      key: const ValueKey('hidden'),
+                      width: 80,
+                      height: 24,
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        width: 60,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Center(
+                          child: Text('••••••', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                        ),
                       ),
-                      child: const Center(
-                        child: Text('••••••', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                    )
+                  : Container(
+                      key: const ValueKey('visible'),
+                      child: Text(
+                        _wholeBalance(),
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                       ),
                     ),
-                  )
-                : Container(
-                    key: const ValueKey('visible'),
-                    child: Text(
-                      _wholeBalance(),
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-          ),
-          const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-        ],
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+          ],
+        ),
+        tileColor: Color(0xFFE8F5E9),
       ),
-      tileColor: Color(0xFFE8F5E9),
     );
   }
 }

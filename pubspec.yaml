@@ -17,7 +17,9 @@ dependencies:
   intl: ^0.20.2
   drift: ^2.27.0
   drift_flutter: ^0.2.4
-  sensors_plus: ^6.1.1
+  sensors_plus: ^5.0.0
+  spoiler_widget: ^1.0.12
+  shake_gesture: ^1.0.0
 
 dev_dependencies:
   flutter_test:
