@@ -49,7 +49,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         actions: [
           IconButton(
             icon: SvgPicture.asset(
-              AppAssets.analysisIcon,
+              AppAssets.historyIcon,
               width: 24,
               height: 24,
               colorFilter: const ColorFilter.mode(

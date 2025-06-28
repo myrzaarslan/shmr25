@@ -3,4 +3,5 @@ class AppAssets {
   static const analysisIcon = 'assets/icons/analysis.svg';
   static const backArrow = 'assets/icons/arrow.svg';
   static const editIcon = 'assets/icons/edit.svg';
+  static const historyIcon = 'assets/icons/history.svg';
 }
