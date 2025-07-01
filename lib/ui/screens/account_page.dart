@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:finance_app/ui/widgets/app_bar.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:finance_app/ui/screens/account_edit_page.dart';
-import 'package:finance_app/constants/assets.dart';
 import 'package:finance_app/constants/currency_field.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_app/cubit/currency/currency_cubit.dart';
+import 'package:finance_app/cubit/account/account_cubit.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shake_gesture/shake_gesture.dart';
 import 'dart:async';
@@ -31,6 +29,34 @@ class _AccountViewState extends State<_AccountView> {
   bool _down = false;
   List<double> _lastAccel = [0, 0, 0];
   static const double shakeThreshold = 15.0;
+
+  Future<void> _showRenameDialog() async {
+    final controller = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Изменить название счёта'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'Введите название'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () {
+              final newName = controller.text.trim();
+              context.read<AccountCubit>().changeAccount(newName);
+              Navigator.of(context).pop();
+            },
+            child: const Text('Сохранить'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -72,7 +98,7 @@ class _AccountViewState extends State<_AccountView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Appbar(
-        title: 'Мой счет',
+        title: context.watch<AccountCubit>().state.accountName,
         actions: [
           IconButton(
             icon: Icon(_hidden ? Icons.visibility : Icons.visibility_off),
@@ -82,12 +108,7 @@ class _AccountViewState extends State<_AccountView> {
           ),
           IconButton(
             icon: Icon(Icons.edit_outlined, size: 24, color: Colors.black),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AccountEditScreen()),
-              );
-            },
+            onPressed: _showRenameDialog,
           ),
         ],
       ),
@@ -267,6 +288,17 @@ class CurrencyTile extends StatelessWidget {
         context.read<CurrencyCubit>().changeCurrency(currency);
         Navigator.of(context).pop();
       },
+    );
+  }
+}
+
+class BalanceNameBottomSheet extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return TextField(
+      controller: TextEditingController(),
+      decoration: InputDecoration(hintText: "Введите название счета"),
     );
   }
 }

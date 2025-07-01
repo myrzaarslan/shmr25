@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'cubit/account/account_cubit.dart';
 import 'data/repositories/mock_bank_account_repository.dart';
 import 'data/repositories/mock_category_repository.dart';
 import 'data/repositories/mock_transaction_repository.dart';
@@ -20,6 +21,7 @@ class FinanceApp extends StatelessWidget {
         RepositoryProvider(create: (_) => MockCategoryRepository()),
         RepositoryProvider(create: (_) => MockTransactionRepository()),
         RepositoryProvider(create: (_) => MockBankAccountRepository()),
+        BlocProvider(create: (_) => AccountCubit()),
       ],
       child: Builder(
         builder: (context) {
