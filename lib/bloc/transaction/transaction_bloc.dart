@@ -93,11 +93,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           .toList();
 
       // Сортировка
-      if (event.sortBy == SortFields.amount) {
+      if (event.sortBy == SortField.amount) {
         filteredTransactions.sort(
           (a, b) => double.parse(b.amount).compareTo(double.parse(a.amount)),
         );
-      } else if (event.sortBy == SortFields.date) {
+      } else if (event.sortBy == SortField.date) {
         filteredTransactions.sort(
           (a, b) => b.transactionDate.compareTo(a.transactionDate),
         );

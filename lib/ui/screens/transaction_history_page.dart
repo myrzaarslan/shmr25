@@ -10,6 +10,7 @@ import '../../data/repositories/mock_transaction_repository.dart';
 import '../widgets/app_bar.dart';
 import '../../constants/sort_field.dart';
 import '../../constants/assets.dart';
+import 'analysis_page.dart';
 
 class TransactionHistoryScreen extends StatelessWidget {
   final bool isIncome;
@@ -107,6 +108,23 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          IconButton(
+            icon: SvgPicture.asset(
+              AppAssets.analysisIcon,
+              width: 28,
+              height: 28,
+            ),
+            tooltip: 'Анализ',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AnalysisPage(isIncome: widget.isIncome, accountId: widget.accountId),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -122,7 +140,6 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
               _loadTransactions();
             },
           ),
-          const Divider(),
           Expanded(child: _TransactionListView(isIncome: widget.isIncome)),
         ],
       ),
