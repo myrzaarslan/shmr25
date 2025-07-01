@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../domain/models/category.dart';
 import '../../data/repositories/mock_category_repository.dart';
 import 'dart:async';
+import 'package:finance_app/ui/widgets/app_bar.dart';
+import 'package:fuzzy/fuzzy.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
@@ -16,6 +18,7 @@ class _CategoryPageState extends State<CategoryPage> {
   List<Category> _allCategories = [];
   List<Category> _filteredCategories = [];
   bool _loading = true;
+  late Fuzzy<Category> _fuzzy;
 
   @override
   void initState() {
@@ -30,6 +33,19 @@ class _CategoryPageState extends State<CategoryPage> {
     setState(() {
       _allCategories = cats;
       _filteredCategories = cats;
+      _fuzzy = Fuzzy<Category>(
+        cats,
+        options: FuzzyOptions<Category>(
+          keys: [
+            WeightedKey<Category>(
+              name: 'name',
+              getter: (cat) => cat.name,
+              weight: 1.0,
+            ),
+          ],
+          threshold: 0.5,
+        ),
+      );
       _loading = false;
     });
   }
@@ -40,37 +56,11 @@ class _CategoryPageState extends State<CategoryPage> {
       setState(() => _filteredCategories = _allCategories);
       return;
     }
+    final result = _fuzzy.search(query);
     setState(() {
-      _filteredCategories = _allCategories
-          .where((cat) => _fuzzyMatch(cat.name.toLowerCase(), query))
-          .toList();
+      _filteredCategories = result.map((r) => r.item).toList();
     });
   }
-
-    bool _fuzzyMatch(String text, String query) {
-      if (text.contains(query)) return true;
-      return _levenshtein(text, query) <= 2;
-    }
-
-    int _levenshtein(String s, String t) {
-      if (s == t) return 0;
-      if (s.isEmpty) return t.length;
-      if (t.isEmpty) return s.length;
-      List<List<int>> d = List.generate(s.length + 1, (_) => List.filled(t.length + 1, 0));
-      for (int i = 0; i <= s.length; i++) d[i][0] = i;
-      for (int j = 0; j <= t.length; j++) d[0][j] = j;
-      for (int i = 1; i <= s.length; i++) {
-        for (int j = 1; j <= t.length; j++) {
-          int cost = s[i - 1] == t[j - 1] ? 0 : 1;
-          d[i][j] = [
-            d[i - 1][j] + 1,
-            d[i][j - 1] + 1,
-            d[i - 1][j - 1] + cost
-          ].reduce((a, b) => a < b ? a : b);
-        }
-      }
-      return d[s.length][t.length];
-    }
 
   @override
   void dispose() {
@@ -81,13 +71,16 @@ class _CategoryPageState extends State<CategoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Мои статьи')),
+      appBar: Appbar(title: 'Мои статьи'),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(
@@ -111,11 +104,20 @@ class _CategoryPageState extends State<CategoryPage> {
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: Color(cat.backgroundColor),
-                          child: Text(cat.emoji, style: const TextStyle(fontSize: 20)),
+                          child: Text(
+                            cat.emoji,
+                            style: const TextStyle(fontSize: 20),
+                          ),
                         ),
-                        title: Text(cat.name, style: const TextStyle(fontSize: 16)),
+                        title: Text(
+                          cat.name,
+                          style: const TextStyle(fontSize: 16),
+                        ),
                         // trailing: Icon(Icons.chevron_right), // если нужен переход
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
                       );
                     },
                   ),

@@ -291,14 +291,3 @@ class CurrencyTile extends StatelessWidget {
     );
   }
 }
-
-class BalanceNameBottomSheet extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    return TextField(
-      controller: TextEditingController(),
-      decoration: InputDecoration(hintText: "Введите название счета"),
-    );
-  }
-}
