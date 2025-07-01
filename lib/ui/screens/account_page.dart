@@ -44,11 +44,11 @@ class _AccountViewState extends State<_AccountView> {
     final dz = event.z - _lastAccel[2];
     final delta = sqrt(dx * dx + dy * dy + dz * dz);
     _lastAccel = [event.x, event.y, event.z];
-    
+
     if (delta > shakeThreshold) {
       setState(() => _hidden = !_hidden);
     }
-    
+
     if (event.z < -6) {
       if (!_down) {
         _down = true;
@@ -60,7 +60,6 @@ class _AccountViewState extends State<_AccountView> {
         setState(() => _hidden = false);
       }
     }
-    
   }
 
   @override
@@ -78,20 +77,11 @@ class _AccountViewState extends State<_AccountView> {
           IconButton(
             icon: Icon(_hidden ? Icons.visibility : Icons.visibility_off),
             onPressed: () {
-              print('Manual toggle pressed');
               setState(() => _hidden = !_hidden);
             },
           ),
           IconButton(
-            icon: SvgPicture.asset(
-              AppAssets.editIcon,
-              width: 24,
-              height: 24,
-              colorFilter: const ColorFilter.mode(
-                Colors.black,
-                BlendMode.srcIn,
-              ),
-            ),
+            icon: Icon(Icons.edit_outlined, size: 24, color: Colors.black),
             onPressed: () {
               Navigator.push(
                 context,
@@ -103,8 +93,11 @@ class _AccountViewState extends State<_AccountView> {
       ),
       body: Column(
         children: [
-          _AccountListItem(hidden: _hidden, onShake: () => setState(() => _hidden = !_hidden)),
-          Divider(),
+          _AccountListItem(
+            hidden: _hidden,
+            onShake: () => setState(() => _hidden = !_hidden),
+          ),
+          Divider(height: 0),
           _BalanceListItem(),
         ],
       ),
@@ -134,7 +127,8 @@ class _AccountListItem extends StatelessWidget {
           children: [
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 400),
-              transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+              transitionBuilder: (child, anim) =>
+                  FadeTransition(opacity: anim, child: child),
               child: hidden
                   ? Container(
                       key: const ValueKey('hidden'),
@@ -149,7 +143,10 @@ class _AccountListItem extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Center(
-                          child: Text('••••••', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                          child: Text(
+                            '••••••',
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                          ),
                         ),
                       ),
                     )
@@ -157,7 +154,10 @@ class _AccountListItem extends StatelessWidget {
                       key: const ValueKey('visible'),
                       child: Text(
                         _wholeBalance(),
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
             ),
@@ -202,14 +202,7 @@ class _BalanceListItem extends StatelessWidget {
 }
 
 Widget _buildCurrencyIcon(CurrencyField currency) {
-  switch (currency) {
-    case CurrencyField.ruble:
-      return const Icon(Icons.currency_ruble, size: 24, color: Colors.black);
-    case CurrencyField.dollar:
-      return const Icon(Icons.attach_money, size: 24, color: Colors.black);
-    case CurrencyField.euro:
-      return const Icon(Icons.euro, size: 24, color: Colors.black);
-  }
+  return Icon(currency.icon, size: 24, color: Colors.black);
 }
 
 String _wholeBalance() {
@@ -228,11 +221,11 @@ class CurrencyPickerBottomSheet extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const CurrencyTile(currency: CurrencyField.ruble),
-        const Divider(),
+        const Divider(height: 0),
         const CurrencyTile(currency: CurrencyField.dollar),
-        const Divider(),
+        const Divider(height: 0),
         const CurrencyTile(currency: CurrencyField.euro),
-        const Divider(),
+        const Divider(height: 0),
         ListTile(
           tileColor: Colors.red,
           contentPadding: const EdgeInsets.symmetric(
