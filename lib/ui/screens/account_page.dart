@@ -153,7 +153,7 @@ class _AccountListItem extends StatelessWidget {
                   : Container(
                       key: const ValueKey('visible'),
                       child: Text(
-                        _wholeBalance(),
+                        _wholeBalance(context),
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
@@ -205,9 +205,11 @@ Widget _buildCurrencyIcon(CurrencyField currency) {
   return Icon(currency.icon, size: 24, color: Colors.black);
 }
 
-String _wholeBalance() {
+String _wholeBalance(BuildContext context) {
   // TODO
-  return '600000 \$';
+  final currency = context.watch<CurrencyCubit>().state;
+  final balance = '60000 ${currency.symbol}';
+  return balance;
 }
 
 class CurrencyPickerBottomSheet extends StatelessWidget {
@@ -257,34 +259,10 @@ class CurrencyTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyIcon = switch (currency) {
-      CurrencyField.ruble => const Icon(
-        Icons.currency_ruble,
-        size: 24,
-        color: Colors.black,
-      ),
-      CurrencyField.dollar => const Icon(
-        Icons.attach_money,
-        size: 24,
-        color: Colors.black,
-      ),
-      CurrencyField.euro => const Icon(
-        Icons.euro,
-        size: 24,
-        color: Colors.black,
-      ),
-    };
-
-    final currencyDescription = switch (currency) {
-      CurrencyField.ruble => "Российский рубль ₽",
-      CurrencyField.dollar => "Американский доллар \$",
-      CurrencyField.euro => "Евро",
-    };
-
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 3, horizontal: 14),
-      leading: currencyIcon,
-      title: Text(currencyDescription),
+      leading: Icon(currency.icon, size: 24, color: Colors.black),
+      title: Text(currency.name),
       onTap: () {
         context.read<CurrencyCubit>().changeCurrency(currency);
         Navigator.of(context).pop();

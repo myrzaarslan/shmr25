@@ -26,4 +26,15 @@ enum CurrencyField {
         return 'Евро';
     }
   }
+
+  String get symbol {
+    switch (this) {
+      case CurrencyField.ruble:
+        return '₽';
+      case CurrencyField.dollar:
+        return '\$';
+      case CurrencyField.euro:
+        return '€';
+    }
+  }
 }
