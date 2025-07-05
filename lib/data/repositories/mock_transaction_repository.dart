@@ -235,17 +235,34 @@ class MockTransactionRepository implements TransactionRepository {
     CreateTransactionRequest request,
   ) async {
     await Future.delayed(const Duration(milliseconds: 800));
-    final newTransaction = Transaction(
+    // Найти аккаунт и категорию по id
+    final account = _transactions.firstWhere((t) => t.account.id == request.accountId, orElse: () => _transactions.first).account;
+    final category = _transactions
+        .expand((t) => [t.category])
+        .firstWhere((c) => c.id == request.categoryId);
+
+    final newTx = TransactionWithDetails(
       id: _transactions.length + 1,
-      accountId: request.accountId,
-      categoryId: request.categoryId,
+      account: account,
+      category: category,
       amount: request.amount,
       transactionDate: request.transactionDate,
       comment: request.comment,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    return newTransaction;
+    _transactions.add(newTx);
+    // Вернуть Transaction (без деталей)
+    return Transaction(
+      id: newTx.id,
+      accountId: newTx.account.id,
+      categoryId: newTx.category.id,
+      amount: newTx.amount,
+      transactionDate: newTx.transactionDate,
+      comment: newTx.comment,
+      createdAt: newTx.createdAt,
+      updatedAt: newTx.updatedAt,
+    );
   }
 
   @override

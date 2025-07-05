@@ -222,6 +222,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     }
     final dateStr = _selectedDate != null ? DateFormat('dd.MM.yyyy').format(_selectedDate!) : '';
     final timeStr = _selectedTime != null ? _selectedTime!.format(context) : '';
+    final decimalSeparator = _decimalSeparator;
     return Scaffold(
       appBar: Appbar(
         title: widget.isIncome ? 'Мои доходы' : 'Мои расходы',
@@ -260,7 +261,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                 controller: _amountController,
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9$_decimalSeparator]')),
+                  _AmountInputFormatter(decimalSeparator),
                 ],
                 decoration: const InputDecoration(
                   border: InputBorder.none,
@@ -274,7 +275,17 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
               title: const Text('Дата'),
               subtitle: Text(dateStr),
               trailing: const Icon(Icons.chevron_right),
-              onTap: _selectDate,
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: _selectedDate ?? DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime.now(),
+                );
+                if (picked != null) {
+                  setState(() => _selectedDate = picked);
+                }
+              },
             ),
             const Divider(height: 0),
             ListTile(
@@ -299,6 +310,37 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AmountInputFormatter extends TextInputFormatter {
+  final String separator;
+  _AmountInputFormatter(this.separator);
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final text = newValue.text;
+    final reg = RegExp('[0-9${RegExp.escape(separator)}]');
+    String filtered = '';
+    int sepCount = 0;
+    for (int i = 0; i < text.length; i++) {
+      final char = text[i];
+      if (char == separator) {
+        if (sepCount == 0) {
+          filtered += char;
+          sepCount++;
+        }
+      } else if (reg.hasMatch(char)) {
+        filtered += char;
+      }
+    }
+    if (filtered.split(separator).length > 2) {
+      filtered = filtered.replaceFirst(separator, '');
+    }
+    return TextEditingValue(
+      text: filtered,
+      selection: TextSelection.collapsed(offset: filtered.length),
     );
   }
 }
