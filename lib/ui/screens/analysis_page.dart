@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../data/repositories/mock_transaction_repository.dart';
 import '../../domain/models/transaction.dart';
-import 'package:intl/intl.dart';
 import '../../features/pie_chart_widget.dart';
+import 'package:intl/intl.dart';
 
 class AnalysisPage extends StatefulWidget {
   final bool isIncome;
   final int accountId;
 
-  const AnalysisPage({Key? key, required this.isIncome, required this.accountId}) : super(key: key);
+  const AnalysisPage({super.key, required this.isIncome, required this.accountId});
 
   @override
   State<AnalysisPage> createState() => _AnalysisPageState();
@@ -21,7 +21,6 @@ class _AnalysisPageState extends State<AnalysisPage> {
   bool _loading = true;
   List<TransactionWithDetails> _all = [];
   Map<int, List<TransactionWithDetails>> _byCategory = {};
-  Map<int, bool> _expanded = {};
   int? _touchedIndex;
 
   @override
@@ -48,7 +47,6 @@ class _AnalysisPageState extends State<AnalysisPage> {
     setState(() {
       _all = filtered;
       _byCategory = byCat;
-      _expanded = {};
       _loading = false;
     });
   }
@@ -85,7 +83,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
           : Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
                       Expanded(
@@ -109,8 +107,11 @@ class _AnalysisPageState extends State<AnalysisPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Сумма', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                      Text('${_total.toStringAsFixed(2)} ₽', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      const Text('Сумма',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                      Text('${_total.toStringAsFixed(2)} ₽',
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
@@ -123,7 +124,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
                         for (final entry in _byCategory.entries)
                           PieChartSection(
                             label: entry.value.first.category.name,
-                            value: entry.value.fold(0.0, (s, t) => s + (double.tryParse(t.amount) ?? 0.0)),
+                            value: entry.value.fold(
+                                0.0, (s, t) => s + (double.tryParse(t.amount) ?? 0.0)),
                             color: Color(entry.value.first.category.backgroundColor),
                           ),
                       ],
@@ -131,82 +133,54 @@ class _AnalysisPageState extends State<AnalysisPage> {
                       onSectionTouch: (i) => setState(() => _touchedIndex = i),
                     ),
                   ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Expanded(
                   child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    itemCount: _byCategory.length,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemCount: _byCategory.length,
                     itemBuilder: (context, idx) {
                       final entry = _byCategory.entries.elementAt(idx);
                       final cat = entry.value.first.category;
-                      final sum = entry.value.fold(0.0, (s, t) => s + (double.tryParse(t.amount) ?? 0.0));
+                      final sum = entry.value.fold(
+                          0.0, (s, t) => s + (double.tryParse(t.amount) ?? 0.0));
                       final percent = _total > 0 ? (sum / _total * 100).round() : 0;
-                      final lastTx = entry.value.reduce((a, b) => a.transactionDate.isAfter(b.transactionDate) ? a : b);
-                      final expanded = _expanded[cat.id] ?? false;
-                      return Column(
-                        children: [
-                          Card(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            elevation: 0,
-                            color: Colors.white,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Color(cat.backgroundColor),
-                                child: Text(cat.emoji, style: const TextStyle(fontSize: 20)),
-                              ),
-                              title: Text(cat.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                              subtitle: lastTx.comment != null && lastTx.comment!.isNotEmpty ? Text(lastTx.comment!) : null,
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text('$percent%', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-                                  const SizedBox(width: 8),
-                                  Text('${sum.toStringAsFixed(0)} ₽', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                                  const SizedBox(width: 8),
-                                  Icon(expanded ? Icons.expand_less : Icons.chevron_right, size: 22),
-                                ],
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              onTap: () {
-                                setState(() => _expanded[cat.id] = !expanded);
-                              },
-                              minVerticalPadding: 12,
-                              horizontalTitleGap: 12,
-                              isThreeLine: false,
-                              dense: false,
-                            ),
+                      final lastTx = entry.value.reduce(
+                          (a, b) => a.transactionDate.isAfter(b.transactionDate) ? a : b);
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                        color: Colors.white,
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: Color(cat.backgroundColor),
+                            child: Text(cat.emoji, style: const TextStyle(fontSize: 20)),
                           ),
-                          if (expanded)
-                            Container(
-                              margin: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[50],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: entry.value.length,
-                                itemBuilder: (context, i) {
-                                  final tx = entry.value[i];
-                                  return ListTile(
-                                    dense: true,
-                                    contentPadding: const EdgeInsets.only(left: 24, right: 8),
-                                    title: Text('${tx.amount} ₽', style: const TextStyle(fontWeight: FontWeight.w500)),
-                                    subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(DateFormat('dd.MM.yyyy').format(tx.transactionDate)),
-                                        if (tx.comment != null && tx.comment!.isNotEmpty)
-                                          Text(tx.comment!, style: const TextStyle(color: Colors.black54)),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                        ],
+                          title: Text(cat.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 16)),
+                          subtitle: lastTx.comment != null && lastTx.comment!.isNotEmpty
+                              ? Text(lastTx.comment!)
+                              : null,
+                          trailing: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text('$percent%',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500, fontSize: 14)),
+                              Text('${sum.toStringAsFixed(0)} ₽',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600, fontSize: 15)),
+                            ],
+                          ),
+                          onTap: () {},
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          horizontalTitleGap: 12,
+                        ),
                       );
                     },
                   ),
@@ -219,6 +193,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
 class _PillDateButton extends StatelessWidget {
   final DateTime date;
+
   const _PillDateButton({required this.date});
 
   @override
@@ -242,8 +217,7 @@ class _PillDateButton extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime d) =>
-      '${_monthName(d.month)} ${d.year}';
+  String _formatDate(DateTime d) => '${_monthName(d.month)} ${d.year}';
 
   String _monthName(int m) {
     const months = [
@@ -252,4 +226,4 @@ class _PillDateButton extends StatelessWidget {
     ];
     return months[m];
   }
-} 
+}
