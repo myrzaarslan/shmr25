@@ -48,15 +48,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         title: widget.isIncome ? 'Доходы сегодня' : 'Расходы сегодня',
         actions: [
           IconButton(
-            icon: SvgPicture.asset(
-              AppAssets.historyIcon,
-              width: 24,
-              height: 24,
-              colorFilter: const ColorFilter.mode(
-                Colors.black,
-                BlendMode.srcIn,
-              ),
-            ),
+            icon: Icon(Icons.history, size: 24, color: Colors.black),
             onPressed: () {
               Navigator.push(
                 context,

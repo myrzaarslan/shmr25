@@ -20,6 +20,7 @@ dependencies:
   sensors_plus: ^5.0.0
   spoiler_widget: ^1.0.12
   shake_gesture: ^1.0.0
+  fuzzy: ^0.5.1
 
 dev_dependencies:
   flutter_test:
