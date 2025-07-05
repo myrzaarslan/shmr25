@@ -1,25 +1,304 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import '../../domain/models/category.dart';
+import '../../domain/models/bank_account.dart';
+import '../../data/repositories/mock_transaction_repository.dart';
+import '../../data/repositories/mock_category_repository.dart';
+import '../../data/repositories/mock_bank_account_repository.dart';
+import '../../domain/models/transaction.dart';
+import '../widgets/app_bar.dart';
 
-class AddTransactionScreen extends StatefulWidget {
+class AddTransactionPage extends StatefulWidget {
   final bool isIncome;
   final int accountId;
-  const AddTransactionScreen({
-    super.key,
-    required this.isIncome,
-    required this.accountId,
-  });
+  const AddTransactionPage({super.key, required this.isIncome, required this.accountId});
 
   @override
-  State<AddTransactionScreen> createState() => _AddTransactionScreenState();
+  State<AddTransactionPage> createState() => _AddTransactionPageState();
 }
 
-class _AddTransactionScreenState extends State<AddTransactionScreen> {
+class _AddTransactionPageState extends State<AddTransactionPage> {
+  final _amountController = TextEditingController();
+  final _commentController = TextEditingController();
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+  Category? _selectedCategory;
+  BankAccount? _selectedAccount;
+  List<Category> _categories = [];
+  List<BankAccount> _accounts = [];
+  bool _loading = true;
+  late String _decimalSeparator;
+  bool _didInitFields = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _decimalSeparator = NumberFormat.simpleCurrency(locale: Localizations.localeOf(context).toString()).symbols.DECIMAL_SEP;
+    if (!_didInitFields) {
+      _initializeFields();
+      _didInitFields = true;
+    }
+  }
+
+  Future<void> _loadData() async {
+    final categoryRepo = MockCategoryRepository();
+    final accountRepo = MockBankAccountRepository();
+    final categories = await categoryRepo.getAllCategories();
+    final accounts = await accountRepo.getAllAccounts();
+    setState(() {
+      _categories = categories;
+      _accounts = accounts;
+      _selectedAccount = accounts.isNotEmpty ? accounts.first : null;
+      _loading = false;
+    });
+  }
+
+  void _initializeFields() {
+    _selectedDate = DateTime.now();
+    _selectedTime = TimeOfDay.now();
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
+  Future<void> _selectTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() => _selectedTime = picked);
+    }
+  }
+
+  void _selectCategory() {
+    final filtered = _categories.where((c) => c.isIncome == widget.isIncome).toList();
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView.builder(
+          itemCount: filtered.length,
+          itemBuilder: (context, index) {
+            final category = filtered[index];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Color(category.backgroundColor),
+                child: Text(category.emoji, style: const TextStyle(fontSize: 20)),
+              ),
+              title: Text(category.name),
+              onTap: () {
+                setState(() => _selectedCategory = category);
+                Navigator.pop(context);
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _selectAccount() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView.builder(
+          itemCount: _accounts.length,
+          itemBuilder: (context, index) {
+            final account = _accounts[index];
+            return ListTile(
+              leading: const CircleAvatar(child: Text('💰')),
+              title: Text(account.name),
+              subtitle: Text('${account.balance} ${account.currency}'),
+              onTap: () {
+                setState(() => _selectedAccount = account);
+                Navigator.pop(context);
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  bool _validateForm() {
+    if (_amountController.text.trim().isEmpty) return false;
+    if (_selectedCategory == null) return false;
+    if (_selectedAccount == null) return false;
+    return true;
+  }
+
+  void _showValidationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ошибка'),
+        content: const Text('Пожалуйста, заполните все поля'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveTransaction() async {
+    if (!_validateForm()) {
+      _showValidationDialog();
+      return;
+    }
+    final repo = MockTransactionRepository();
+    final amount = _amountController.text.trim().replaceAll(_decimalSeparator, '.');
+    final comment = _commentController.text.trim().isEmpty ? null : _commentController.text.trim();
+    final dateTime = DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
+      _selectedTime!.hour,
+      _selectedTime!.minute,
+    );
+    try {
+      await repo.createTransaction(
+        CreateTransactionRequest(
+          accountId: _selectedAccount!.id,
+          categoryId: _selectedCategory!.id,
+          amount: amount,
+          transactionDate: dateTime,
+          comment: comment,
+        ),
+      );
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      _showErrorDialog(e.toString());
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ошибка'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    final dateStr = _selectedDate != null ? DateFormat('dd.MM.yyyy').format(_selectedDate!) : '';
+    final timeStr = _selectedTime != null ? _selectedTime!.format(context) : '';
     return Scaffold(
-      appBar: AppBar(title: Text('Статьи')),
-      body: Center(child: Text('Список статей')),
+      appBar: Appbar(
+        title: widget.isIncome ? 'Мои доходы' : 'Мои расходы',
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check, color: Colors.black),
+            onPressed: _saveTransaction,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              title: const Text('Счёт'),
+              subtitle: Text(_selectedAccount?.name ?? ''),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _selectAccount,
+            ),
+            const Divider(height: 0),
+            ListTile(
+              title: const Text('Статья'),
+              subtitle: Text(_selectedCategory?.name ?? ''),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _selectCategory,
+            ),
+            const Divider(height: 0),
+            ListTile(
+              title: const Text('Сумма'),
+              subtitle: TextField(
+                controller: _amountController,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9$_decimalSeparator]')),
+                ],
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: '0',
+                ),
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+            const Divider(height: 0),
+            ListTile(
+              title: const Text('Дата'),
+              subtitle: Text(dateStr),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _selectDate,
+            ),
+            const Divider(height: 0),
+            ListTile(
+              title: const Text('Время'),
+              subtitle: Text(timeStr),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _selectTime,
+            ),
+            const Divider(height: 0),
+            ListTile(
+              title: const Text('Комментарий'),
+              subtitle: TextField(
+                controller: _commentController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Комментарий',
+                ),
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

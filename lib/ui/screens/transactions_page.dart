@@ -11,6 +11,7 @@ import '../widgets/add_transaction_fab.dart';
 import 'transaction_edit_page.dart';
 import 'transaction_history_page.dart';
 import '../../constants/assets.dart';
+import 'add_transaction_page.dart';
 
 class TransactionsScreen extends StatefulWidget {
   final bool isIncome;
@@ -163,9 +164,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           final result = await Navigator.push<bool>(
             context,
             MaterialPageRoute(
-              builder: (context) => TransactionEditPage(
-                isEdit: false,
-                transaction: null,
+              builder: (context) => AddTransactionPage(
+                isIncome: widget.isIncome,
+                accountId: widget.accountId,
               ),
             ),
           );

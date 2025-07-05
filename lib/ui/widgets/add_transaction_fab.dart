@@ -17,7 +17,7 @@ class AddTransactionFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      onPressed: () {},
+      onPressed: onPressed,
       backgroundColor: const Color(0xFF2ECC71),
       shape: const CircleBorder(),
       elevation: 0,

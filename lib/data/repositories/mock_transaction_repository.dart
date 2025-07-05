@@ -5,6 +5,7 @@ import '../../domain/repositories/transaction_repository.dart';
 
 class MockTransactionRepository implements TransactionRepository {
   static final List<TransactionWithDetails> _transactions = [
+    // Доходы за сегодня
     TransactionWithDetails(
       id: 1,
       account: BankAccount(
@@ -24,11 +25,12 @@ class MockTransactionRepository implements TransactionRepository {
         backgroundColor: 0xFFCFE8A9,
       ),
       amount: '80000.00',
-      transactionDate: DateTime.now().subtract(const Duration(days: 1)),
+      transactionDate: DateTime.now(),
       comment: 'Зарплата за месяц',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      updatedAt: DateTime.now().subtract(const Duration(days: 1)),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     ),
+    // Расходы за сегодня
     TransactionWithDetails(
       id: 2,
       account: BankAccount(
@@ -48,10 +50,10 @@ class MockTransactionRepository implements TransactionRepository {
         backgroundColor: 0xFFE8A9A9,
       ),
       amount: '5000.00',
-      transactionDate: DateTime.now().subtract(const Duration(hours: 2)),
+      transactionDate: DateTime.now(),
       comment: 'Покупки в супермаркете',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     ),
     TransactionWithDetails(
       id: 3,
@@ -72,11 +74,12 @@ class MockTransactionRepository implements TransactionRepository {
         backgroundColor: 0xFFCFE8A9,
       ),
       amount: '350.00',
-      transactionDate: DateTime.now().subtract(const Duration(hours: 5)),
+      transactionDate: DateTime.now(),
       comment: 'Такси',
-      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      updatedAt: DateTime.now().subtract(const Duration(hours: 5)),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     ),
+    // Доходы за вчера
     TransactionWithDetails(
       id: 4,
       account: BankAccount(
@@ -96,11 +99,12 @@ class MockTransactionRepository implements TransactionRepository {
         backgroundColor: 0xFF80D2C4,
       ),
       amount: '15000.00',
-      transactionDate: DateTime.now().subtract(const Duration(days: 3)),
+      transactionDate: DateTime.now().subtract(const Duration(days: 1)),
       comment: 'Фриланс проект',
-      createdAt: DateTime.now().subtract(const Duration(days: 3)),
-      updatedAt: DateTime.now().subtract(const Duration(days: 3)),
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      updatedAt: DateTime.now().subtract(const Duration(days: 1)),
     ),
+    // Расходы за вчера
     TransactionWithDetails(
       id: 5,
       account: BankAccount(
@@ -120,11 +124,12 @@ class MockTransactionRepository implements TransactionRepository {
         backgroundColor: 0xFF80D2C4,
       ),
       amount: '1200.00',
-      transactionDate: DateTime.now().subtract(const Duration(days: 4)),
+      transactionDate: DateTime.now().subtract(const Duration(days: 1)),
       comment: 'Кино',
-      createdAt: DateTime.now().subtract(const Duration(days: 4)),
-      updatedAt: DateTime.now().subtract(const Duration(days: 4)),
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      updatedAt: DateTime.now().subtract(const Duration(days: 1)),
     ),
+    // Расходы за прошлую неделю
     TransactionWithDetails(
       id: 6,
       account: BankAccount(
@@ -144,11 +149,12 @@ class MockTransactionRepository implements TransactionRepository {
         backgroundColor: 0xFF81A2CA,
       ),
       amount: '2500.00',
-      transactionDate: DateTime.now().subtract(const Duration(days: 10)),
+      transactionDate: DateTime.now().subtract(const Duration(days: 7)),
       comment: 'Абонемент в зал',
-      createdAt: DateTime.now().subtract(const Duration(days: 10)),
-      updatedAt: DateTime.now().subtract(const Duration(days: 10)),
+      createdAt: DateTime.now().subtract(const Duration(days: 7)),
+      updatedAt: DateTime.now().subtract(const Duration(days: 7)),
     ),
+    // Доходы за сегодня
     TransactionWithDetails(
       id: 7,
       account: BankAccount(
@@ -170,6 +176,55 @@ class MockTransactionRepository implements TransactionRepository {
       amount: '5000.00',
       transactionDate: DateTime.now(),
       comment: 'Подарок на день рождения',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ),
+    // Дополнительные расходы за сегодня
+    TransactionWithDetails(
+      id: 8,
+      account: BankAccount(
+        id: 1,
+        userId: 1,
+        name: 'Основной счёт',
+        balance: '150000.00',
+        currency: 'RUB',
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        updatedAt: DateTime.now(),
+      ),
+      category: const Category(
+        id: 8,
+        name: 'Одежда',
+        emoji: '👕',
+        isIncome: false,
+        backgroundColor: 0xFF81A2CA,
+      ),
+      amount: '3000.00',
+      transactionDate: DateTime.now(),
+      comment: 'Новая футболка',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ),
+    TransactionWithDetails(
+      id: 9,
+      account: BankAccount(
+        id: 1,
+        userId: 1,
+        name: 'Основной счёт',
+        balance: '150000.00',
+        currency: 'RUB',
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        updatedAt: DateTime.now(),
+      ),
+      category: const Category(
+        id: 9,
+        name: 'Здоровье',
+        emoji: '🏥',
+        isIncome: false,
+        backgroundColor: 0xFFE8A9A9,
+      ),
+      amount: '1500.00',
+      transactionDate: DateTime.now(),
+      comment: 'Визит к врачу',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     ),
