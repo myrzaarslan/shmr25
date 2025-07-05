@@ -5,9 +5,10 @@ import 'package:flutter_svg/svg.dart';
 import '../../bloc/transaction/transaction_bloc.dart';
 import '../../bloc/transaction/transaction_event.dart';
 import '../../bloc/transaction/transaction_state.dart';
+import '../../domain/models/transaction.dart';
 import '../widgets/transaction_list_item.dart';
 import '../widgets/add_transaction_fab.dart';
-import 'add_transaction_page.dart';
+import 'transaction_edit_page.dart';
 import 'transaction_history_page.dart';
 import '../../constants/assets.dart';
 
@@ -39,6 +40,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         isIncome: widget.isIncome,
       ),
     );
+  }
+
+  void _editTransaction(TransactionWithDetails transaction) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TransactionEditPage(
+          isEdit: true,
+          transaction: transaction,
+        ),
+      ),
+    );
+    if (result == true) {
+      _loadTransactions();
+    }
   }
 
   @override
@@ -127,7 +143,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             return TransactionListItem(
                               transaction: state.transactions[index],
                               onTap: () {
-                                // TODO
+                                _editTransaction(state.transactions[index]);
                               },
                             );
                           },
@@ -147,9 +163,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           final result = await Navigator.push<bool>(
             context,
             MaterialPageRoute(
-              builder: (context) => AddTransactionScreen(
-                isIncome: widget.isIncome,
-                accountId: widget.accountId,
+              builder: (context) => TransactionEditPage(
+                isEdit: false,
+                transaction: null,
               ),
             ),
           );

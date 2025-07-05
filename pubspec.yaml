@@ -21,6 +21,7 @@ dependencies:
   spoiler_widget: ^1.0.12
   shake_gesture: ^1.0.0
   fuzzy: ^0.5.1
+  fl_chart: ^0.66.0
 
 dev_dependencies:
   flutter_test:
