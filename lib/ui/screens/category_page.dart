@@ -102,6 +102,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     itemBuilder: (context, i) {
                       final cat = _filteredCategories[i];
                       return ListTile(
+                        key: ValueKey(cat.id),
                         leading: CircleAvatar(
                           backgroundColor: Color(cat.backgroundColor),
                           child: Text(
@@ -113,7 +114,6 @@ class _CategoryPageState extends State<CategoryPage> {
                           cat.name,
                           style: const TextStyle(fontSize: 16),
                         ),
-                        // trailing: Icon(Icons.chevron_right), // если нужен переход
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 4,
