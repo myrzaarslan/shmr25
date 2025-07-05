@@ -1,24 +1,31 @@
-import 'package:flutter/material.dart';
-import 'package:finance_app/ui/widgets/app_bar.dart';
-import 'package:finance_app/constants/currency_field.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:finance_app/cubit/currency/currency_cubit.dart';
-import 'package:finance_app/cubit/account/account_cubit.dart';
-import 'package:sensors_plus/sensors_plus.dart';
-import 'package:shake_gesture/shake_gesture.dart';
 import 'dart:async';
 import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+
+import '../../cubit/account/account_cubit.dart';
+import '../../cubit/currency/currency_cubit.dart';
+import '../../constants/currency_field.dart';
+import '../../ui/widgets/app_bar.dart';
+import '../../ui/widgets/account_chart.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (_) => CurrencyCubit(), child: _AccountView());
+    return BlocProvider(
+      create: (_) => CurrencyCubit(),
+      child: const _AccountView(),
+    );
   }
 }
 
 class _AccountView extends StatefulWidget {
+  const _AccountView();
+
   @override
   State<_AccountView> createState() => _AccountViewState();
 }
@@ -29,6 +36,47 @@ class _AccountViewState extends State<_AccountView> {
   bool _down = false;
   List<double> _lastAccel = [0, 0, 0];
   static const double shakeThreshold = 15.0;
+
+  final List<double> _days = List.filled(30, 0);
+  final List<String> _labels = List.generate(
+    30,
+    (i) => '${(i + 1).toString().padLeft(2, '0')}.${DateTime.now().month.toString().padLeft(2, '0')}',
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _accelSub = accelerometerEvents.listen(_handleAccel);
+
+    // Example: generate mock transactions
+    for (int i = 0; i < _days.length; i++) {
+      _days[i] = i % 2 == 0 ? i * 1000.0 : -i * 500.0;
+    }
+  }
+
+  void _handleAccel(AccelerometerEvent event) {
+    final dx = event.x - _lastAccel[0];
+    final dy = event.y - _lastAccel[1];
+    final dz = event.z - _lastAccel[2];
+    final delta = sqrt(dx * dx + dy * dy + dz * dz);
+    _lastAccel = [event.x, event.y, event.z];
+
+    if (delta > shakeThreshold) {
+      setState(() => _hidden = !_hidden);
+    }
+
+    if (event.z < -6) {
+      if (!_down) {
+        _down = true;
+        setState(() => _hidden = true);
+      }
+    } else if (event.z > 6) {
+      if (_down) {
+        _down = false;
+        setState(() => _hidden = false);
+      }
+    }
+  }
 
   Future<void> _showRenameDialog() async {
     final controller = TextEditingController();
@@ -59,36 +107,6 @@ class _AccountViewState extends State<_AccountView> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _accelSub = accelerometerEvents.listen(_handleAccel);
-  }
-
-  void _handleAccel(AccelerometerEvent event) {
-    final dx = event.x - _lastAccel[0];
-    final dy = event.y - _lastAccel[1];
-    final dz = event.z - _lastAccel[2];
-    final delta = sqrt(dx * dx + dy * dy + dz * dz);
-    _lastAccel = [event.x, event.y, event.z];
-
-    if (delta > shakeThreshold) {
-      setState(() => _hidden = !_hidden);
-    }
-
-    if (event.z < -6) {
-      if (!_down) {
-        _down = true;
-        setState(() => _hidden = true);
-      }
-    } else if (event.z > 6) {
-      if (_down) {
-        _down = false;
-        setState(() => _hidden = false);
-      }
-    }
-  }
-
-  @override
   void dispose() {
     _accelSub?.cancel();
     super.dispose();
@@ -96,30 +114,37 @@ class _AccountViewState extends State<_AccountView> {
 
   @override
   Widget build(BuildContext context) {
+    final currency = context.watch<CurrencyCubit>().state.symbol;
     return Scaffold(
       appBar: Appbar(
         title: context.watch<AccountCubit>().state.accountName,
         actions: [
           IconButton(
-            icon: Icon(_hidden ? Icons.visibility : Icons.visibility_off),
-            onPressed: () {
-              setState(() => _hidden = !_hidden);
-            },
+            icon: Icon(
+              _hidden ? Icons.visibility : Icons.visibility_off,
+              color: Colors.black,
+            ),
+            onPressed: () => setState(() => _hidden = !_hidden),
           ),
           IconButton(
-            icon: Icon(Icons.edit_outlined, size: 24, color: Colors.black),
+            icon: const Icon(Icons.edit_outlined, size: 24, color: Colors.black),
             onPressed: _showRenameDialog,
           ),
         ],
       ),
       body: Column(
         children: [
-          _AccountListItem(
-            hidden: _hidden,
-            onShake: () => setState(() => _hidden = !_hidden),
+          _AccountListItem(hidden: _hidden),
+          const Divider(height: 0),
+          const _BalanceListItem(),
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: AccountChart(
+              values: _days,
+              labels: _labels,
+              currency: currency,
+            ),
           ),
-          Divider(height: 0),
-          _BalanceListItem(),
         ],
       ),
     );
@@ -128,109 +153,88 @@ class _AccountViewState extends State<_AccountView> {
 
 class _AccountListItem extends StatelessWidget {
   final bool hidden;
-  final VoidCallback onShake;
-  const _AccountListItem({this.hidden = false, required this.onShake});
+  const _AccountListItem({required this.hidden});
+
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = Colors.white;
-    final avatar = "💰";
-    final accountName = "Баланс";
-    return ShakeGesture(
-      onShake: onShake,
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: backgroundColor,
-          child: Text(avatar, style: const TextStyle(fontSize: 20)),
-        ),
-        title: Text(accountName, style: const TextStyle(fontSize: 20)),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
-              transitionBuilder: (child, anim) =>
-                  FadeTransition(opacity: anim, child: child),
-              child: hidden
-                  ? Container(
-                      key: const ValueKey('hidden'),
-                      width: 80,
-                      height: 24,
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        width: 60,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            '••••••',
-                            style: TextStyle(fontSize: 18, color: Colors.grey),
-                          ),
-                        ),
+    final balance = '60 000';
+    final currency = context.watch<CurrencyCubit>().state.symbol;
+    return ListTile(
+      leading: const CircleAvatar(
+        backgroundColor: Colors.white,
+        child: Text('💰', style: TextStyle(fontSize: 20)),
+      ),
+      title: const Text("Баланс", style: TextStyle(fontSize: 20)),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: hidden
+                ? Container(
+                    key: const ValueKey('hidden'),
+                    width: 80,
+                    height: 24,
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      width: 60,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    )
-                  : Container(
-                      key: const ValueKey('visible'),
-                      child: Text(
-                        _wholeBalance(context),
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                      child: const Center(
+                        child: Text(
+                          '•••••',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
                         ),
                       ),
                     ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-          ],
-        ),
-        tileColor: Color(0xFFE8F5E9),
+                  )
+                : Text(
+                    '$balance $currency',
+                    key: const ValueKey('visible'),
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+        ],
       ),
+      tileColor: const Color(0xFFE8F5E9),
     );
   }
 }
 
 class _BalanceListItem extends StatelessWidget {
+  const _BalanceListItem();
+
   @override
   Widget build(BuildContext context) {
     final currency = context.watch<CurrencyCubit>().state;
     return ListTile(
-      title: Text("Валюта", style: const TextStyle(fontSize: 20)),
+      title: const Text("Валюта", style: TextStyle(fontSize: 20)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildCurrencyIcon(currency),
+          Icon(currency.icon, size: 24, color: Colors.black),
           const SizedBox(width: 4),
           const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
         ],
       ),
-      tileColor: Color(0xFFE8F5E9),
-      onTap: () async {
-        await showModalBottomSheet<void>(
-          context: context,
-          builder: (bottomSheetContext) {
-            return BlocProvider.value(
-              value: context.read<CurrencyCubit>(),
-              child: const CurrencyPickerBottomSheet(),
-            );
-          },
-        );
-      },
+      tileColor: const Color(0xFFE8F5E9),
+      onTap: () => showModalBottomSheet<void>(
+        context: context,
+        builder: (_) => BlocProvider.value(
+          value: context.read<CurrencyCubit>(),
+          child: const CurrencyPickerBottomSheet(),
+        ),
+      ),
     );
   }
-}
-
-Widget _buildCurrencyIcon(CurrencyField currency) {
-  return Icon(currency.icon, size: 24, color: Colors.black);
-}
-
-String _wholeBalance(BuildContext context) {
-  // TODO
-  final currency = context.watch<CurrencyCubit>().state;
-  final balance = '60000 ${currency.symbol}';
-  return balance;
 }
 
 class CurrencyPickerBottomSheet extends StatelessWidget {
@@ -239,7 +243,6 @@ class CurrencyPickerBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -251,22 +254,10 @@ class CurrencyPickerBottomSheet extends StatelessWidget {
         const Divider(height: 0),
         ListTile(
           tileColor: Colors.red,
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 3,
-            horizontal: 14,
-          ),
-          leading: const Icon(
-            Icons.cancel_outlined,
-            color: Colors.white,
-            size: 20,
-          ),
-          title: Text(
-            "Отмена",
-            style: theme.textTheme.bodyLarge!.copyWith(color: Colors.white),
-          ),
-          onTap: () {
-            Navigator.of(context).pop();
-          },
+          contentPadding: const EdgeInsets.symmetric(vertical: 3, horizontal: 14),
+          leading: const Icon(Icons.cancel_outlined, color: Colors.white, size: 20),
+          title: Text("Отмена", style: theme.textTheme.bodyLarge!.copyWith(color: Colors.white)),
+          onTap: () => Navigator.of(context).pop(),
         ),
       ],
     );
@@ -274,9 +265,8 @@ class CurrencyPickerBottomSheet extends StatelessWidget {
 }
 
 class CurrencyTile extends StatelessWidget {
-  const CurrencyTile({super.key, required this.currency});
-
   final CurrencyField currency;
+  const CurrencyTile({super.key, required this.currency});
 
   @override
   Widget build(BuildContext context) {

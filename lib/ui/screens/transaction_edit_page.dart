@@ -1,30 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import '../../domain/models/transaction.dart';
 import '../../domain/models/category.dart';
 import '../../domain/models/bank_account.dart';
 import '../../data/repositories/mock_transaction_repository.dart';
 import '../../data/repositories/mock_category_repository.dart';
 import '../../data/repositories/mock_bank_account_repository.dart';
-import '../../domain/models/transaction.dart';
 import '../widgets/app_bar.dart';
 
-class AddTransactionPage extends StatefulWidget {
-  final bool isIncome;
-  final int accountId;
-  const AddTransactionPage({super.key, required this.isIncome, required this.accountId});
+class TransactionEditPage extends StatefulWidget {
+  final bool isEdit;
+  final TransactionWithDetails? transaction;
+  const TransactionEditPage({super.key, required this.isEdit, this.transaction});
 
   @override
-  State<AddTransactionPage> createState() => _AddTransactionPageState();
+  State<TransactionEditPage> createState() => _TransactionEditPageState();
 }
 
-class _AddTransactionPageState extends State<AddTransactionPage> {
+class _TransactionEditPageState extends State<TransactionEditPage> {
   final _amountController = TextEditingController();
   final _commentController = TextEditingController();
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   Category? _selectedCategory;
   BankAccount? _selectedAccount;
+  bool _isIncome = false;
   List<Category> _categories = [];
   List<BankAccount> _accounts = [];
   bool _loading = true;
@@ -61,8 +62,20 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   }
 
   void _initializeFields() {
-    _selectedDate = DateTime.now();
-    _selectedTime = TimeOfDay.now();
+    if (widget.isEdit && widget.transaction != null) {
+      final tx = widget.transaction!;
+      _amountController.text = tx.amount.replaceAll('.', _decimalSeparator);
+      _commentController.text = tx.comment ?? '';
+      _selectedDate = tx.transactionDate;
+      _selectedTime = TimeOfDay.fromDateTime(tx.transactionDate);
+      _selectedCategory = tx.category;
+      _selectedAccount = tx.account;
+      _isIncome = tx.category.isIncome;
+    } else {
+      _selectedDate = DateTime.now();
+      _selectedTime = TimeOfDay.now();
+      _isIncome = false;
+    }
   }
 
   @override
@@ -95,7 +108,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   }
 
   void _selectCategory() {
-    final filtered = _categories.where((c) => c.isIncome == widget.isIncome).toList();
+    final filtered = _categories.where((c) => c.isIncome == _isIncome).toList();
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
@@ -182,15 +195,28 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       _selectedTime!.minute,
     );
     try {
-      await repo.createTransaction(
-        CreateTransactionRequest(
-          accountId: _selectedAccount!.id,
-          categoryId: _selectedCategory!.id,
-          amount: amount,
-          transactionDate: dateTime,
-          comment: comment,
-        ),
-      );
+      if (widget.isEdit && widget.transaction != null) {
+        await repo.updateTransaction(
+          widget.transaction!.id,
+          UpdateTransactionRequest(
+            accountId: _selectedAccount!.id,
+            categoryId: _selectedCategory!.id,
+            amount: amount,
+            transactionDate: dateTime,
+            comment: comment,
+          ),
+        );
+      } else {
+        await repo.createTransaction(
+          CreateTransactionRequest(
+            accountId: _selectedAccount!.id,
+            categoryId: _selectedCategory!.id,
+            amount: amount,
+            transactionDate: dateTime,
+            comment: comment,
+          ),
+        );
+      }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       _showErrorDialog(e.toString());
@@ -213,6 +239,17 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     );
   }
 
+  Future<void> _deleteTransaction() async {
+    if (!widget.isEdit || widget.transaction == null) return;
+    final repo = MockTransactionRepository();
+    try {
+      await repo.deleteTransaction(widget.transaction!.id);
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      _showErrorDialog(e.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -225,7 +262,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     final decimalSeparator = _decimalSeparator;
     return Scaffold(
       appBar: Appbar(
-        title: widget.isIncome ? 'Мои доходы' : 'Мои расходы',
+        title: widget.isEdit ? 'Мои расходы' : ( _isIncome ? 'Мои доходы' : 'Мои расходы'),
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -280,7 +317,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                   context: context,
                   initialDate: _selectedDate ?? DateTime.now(),
                   firstDate: DateTime(2000),
-                  lastDate: DateTime.now(),
+                  lastDate: DateTime.now(), // Ограничение по текущей дате
                 );
                 if (picked != null) {
                   setState(() => _selectedDate = picked);
@@ -307,6 +344,25 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                 style: const TextStyle(fontSize: 16),
               ),
             ),
+            if (widget.isEdit)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[300],
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed: _deleteTransaction,
+                    child: const Text('Удалить расход'),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -314,6 +370,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   }
 }
 
+// --- Formatter for amount field ---
 class _AmountInputFormatter extends TextInputFormatter {
   final String separator;
   _AmountInputFormatter(this.separator);
@@ -321,6 +378,7 @@ class _AmountInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     final text = newValue.text;
+    // Only digits and one separator
     final reg = RegExp('[0-9${RegExp.escape(separator)}]');
     String filtered = '';
     int sepCount = 0;
@@ -335,6 +393,7 @@ class _AmountInputFormatter extends TextInputFormatter {
         filtered += char;
       }
     }
+    // Only one separator allowed
     if (filtered.split(separator).length > 2) {
       filtered = filtered.replaceFirst(separator, '');
     }
@@ -343,4 +402,4 @@ class _AmountInputFormatter extends TextInputFormatter {
       selection: TextSelection.collapsed(offset: filtered.length),
     );
   }
-}
+} 

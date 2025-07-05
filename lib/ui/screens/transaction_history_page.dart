@@ -11,6 +11,8 @@ import '../widgets/app_bar.dart';
 import '../../constants/sort_field.dart';
 import '../../constants/assets.dart';
 import 'analysis_page.dart';
+import '../../domain/models/transaction.dart';
+import 'transaction_edit_page.dart';
 
 class TransactionHistoryScreen extends StatelessWidget {
   final bool isIncome;
@@ -223,6 +225,30 @@ class _TransactionListView extends StatelessWidget {
 
   const _TransactionListView({required this.isIncome});
 
+  void _editTransaction(BuildContext context, TransactionWithDetails transaction) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TransactionEditPage(
+          isEdit: true,
+          transaction: transaction,
+        ),
+      ),
+    );
+    if (result == true) {
+      // Обновляем список транзакций
+      context.read<TransactionBloc>().add(
+        LoadTransactionsForPeriod(
+          accountId: 1, // TODO: передавать accountId
+          isIncome: isIncome,
+          startDate: DateTime.now().subtract(const Duration(days: 30)),
+          endDate: DateTime.now(),
+          sortBy: SortField.date,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TransactionBloc, TransactionState>(
@@ -266,6 +292,7 @@ class _TransactionListView extends StatelessWidget {
                     ),
                   ],
                 ),
+                onTap: () => _editTransaction(context, t),
               );
             },
           );

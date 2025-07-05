@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/repositories/mock_transaction_repository.dart';
 import '../../domain/models/transaction.dart';
 import 'package:intl/intl.dart';
+import '../../features/pie_chart_widget.dart';
 
 class AnalysisPage extends StatefulWidget {
   final bool isIncome;
@@ -21,6 +22,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
   List<TransactionWithDetails> _all = [];
   Map<int, List<TransactionWithDetails>> _byCategory = {};
   Map<int, bool> _expanded = {};
+  int? _touchedIndex;
 
   @override
   void initState() {
@@ -112,6 +114,23 @@ class _AnalysisPageState extends State<AnalysisPage> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 8),
+                if (_byCategory.isNotEmpty)
+                  SizedBox(
+                    height: 220,
+                    child: PieChartWidget(
+                      sections: [
+                        for (final entry in _byCategory.entries)
+                          PieChartSection(
+                            label: entry.value.first.category.name,
+                            value: entry.value.fold(0.0, (s, t) => s + (double.tryParse(t.amount) ?? 0.0)),
+                            color: Color(entry.value.first.category.backgroundColor),
+                          ),
+                      ],
+                      touchedIndex: _touchedIndex,
+                      onSectionTouch: (i) => setState(() => _touchedIndex = i),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Expanded(
                   child: ListView.separated(
