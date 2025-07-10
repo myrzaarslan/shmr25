@@ -41,19 +41,40 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           );
 
       final filteredTransactions = transactions
-          .where(
-            (transaction) => transaction.category.isIncome == event.isIncome,
-          )
+          .where((tx) => tx.category.isIncome == event.isIncome)
           .toList();
 
       final totalAmount = _calculateTotalAmount(filteredTransactions);
 
-      emit(
-        TransactionLoaded(
-          transactions: filteredTransactions,
-          totalAmount: totalAmount,
-        ),
-      );
+      if (state is TransactionLoaded) {
+        final current = state as TransactionLoaded;
+
+        emit(
+          current.copyWith(
+            incomeTransactions: event.isIncome
+                ? filteredTransactions
+                : current.incomeTransactions,
+            expenseTransactions: event.isIncome
+                ? current.expenseTransactions
+                : filteredTransactions,
+            totalIncomeAmount: event.isIncome
+                ? totalAmount
+                : current.totalIncomeAmount,
+            totalExpenseAmount: event.isIncome
+                ? current.totalExpenseAmount
+                : totalAmount,
+          ),
+        );
+      } else {
+        emit(
+          TransactionLoaded(
+            incomeTransactions: event.isIncome ? filteredTransactions : [],
+            expenseTransactions: event.isIncome ? [] : filteredTransactions,
+            totalIncomeAmount: event.isIncome ? totalAmount : 0.0,
+            totalExpenseAmount: event.isIncome ? 0.0 : totalAmount,
+          ),
+        );
+      }
     } catch (e) {
       emit(TransactionError('Ошибка загрузки транзакций: ${e.toString()}'));
     }
@@ -87,9 +108,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           );
 
       var filteredTransactions = transactions
-          .where(
-            (transaction) => transaction.category.isIncome == event.isIncome,
-          )
+          .where((tx) => tx.category.isIncome == event.isIncome)
           .toList();
 
       // Сортировка
@@ -105,13 +124,37 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
       final totalAmount = _calculateTotalAmount(filteredTransactions);
 
-      emit(
-        TransactionLoaded(
-          transactions: filteredTransactions,
-          totalAmount: totalAmount,
-          sortBy: event.sortBy,
-        ),
-      );
+      if (state is TransactionLoaded) {
+        final current = state as TransactionLoaded;
+
+        emit(
+          current.copyWith(
+            incomeTransactions: event.isIncome
+                ? filteredTransactions
+                : current.incomeTransactions,
+            expenseTransactions: event.isIncome
+                ? current.expenseTransactions
+                : filteredTransactions,
+            totalIncomeAmount: event.isIncome
+                ? totalAmount
+                : current.totalIncomeAmount,
+            totalExpenseAmount: event.isIncome
+                ? current.totalExpenseAmount
+                : totalAmount,
+            sortBy: event.sortBy,
+          ),
+        );
+      } else {
+        emit(
+          TransactionLoaded(
+            incomeTransactions: event.isIncome ? filteredTransactions : [],
+            expenseTransactions: event.isIncome ? [] : filteredTransactions,
+            totalIncomeAmount: event.isIncome ? totalAmount : 0.0,
+            totalExpenseAmount: event.isIncome ? 0.0 : totalAmount,
+            sortBy: event.sortBy,
+          ),
+        );
+      }
     } catch (e) {
       emit(TransactionError('Ошибка загрузки транзакций: ${e.toString()}'));
     }
@@ -154,8 +197,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   }
 
   double _calculateTotalAmount(List<TransactionWithDetails> transactions) {
-    return transactions.fold(0.0, (sum, transaction) {
-      return sum + double.parse(transaction.amount);
+    return transactions.fold(0.0, (sum, tx) {
+      return sum + double.parse(tx.amount);
     });
   }
 }
