@@ -121,7 +121,10 @@ class _TransactionHistoryViewState extends State<TransactionHistoryView> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => AnalysisPage(isIncome: widget.isIncome, accountId: widget.accountId),
+                  builder: (_) => AnalysisPage(
+                    isIncome: widget.isIncome,
+                    accountId: widget.accountId,
+                  ),
                 ),
               );
             },
@@ -206,7 +209,7 @@ class _TransactionFilterPanel extends StatelessWidget {
                   ListTile(
                     title: const Text('Сумма'),
                     trailing: Text(
-                      '${state.totalAmount.toStringAsFixed(2)} ₽',
+                      '${isIncome ? state.totalIncomeAmount.toStringAsFixed(2) : state.totalExpenseAmount.toStringAsFixed(2)} ₽',
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ),
@@ -225,14 +228,15 @@ class _TransactionListView extends StatelessWidget {
 
   const _TransactionListView({required this.isIncome});
 
-  void _editTransaction(BuildContext context, TransactionWithDetails transaction) async {
+  void _editTransaction(
+    BuildContext context,
+    TransactionWithDetails transaction,
+  ) async {
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => TransactionEditPage(
-          isEdit: true,
-          transaction: transaction,
-        ),
+        builder: (context) =>
+            TransactionEditPage(isEdit: true, transaction: transaction),
       ),
     );
     if (result == true) {
@@ -260,13 +264,16 @@ class _TransactionListView extends StatelessWidget {
           return Center(child: Text(state.message));
         }
         if (state is TransactionLoaded) {
-          if (state.transactions.isEmpty) {
+          final txs = isIncome
+              ? (state.incomeTransactions ?? [])
+              : (state.expenseTransactions ?? []);
+          if (txs.isEmpty) {
             return const Center(child: Text('Нет транзакций за период'));
           }
           return ListView.builder(
-            itemCount: state.transactions.length,
+            itemCount: txs.length,
             itemBuilder: (_, index) {
-              final t = state.transactions[index];
+              final t = txs[index];
               final amountColor = isIncome ? Colors.green : Colors.red;
               return ListTile(
                 leading: Text(

@@ -1,7 +1,6 @@
 import 'package:finance_app/ui/widgets/app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/svg.dart';
 import '../../bloc/transaction/transaction_bloc.dart';
 import '../../bloc/transaction/transaction_event.dart';
 import '../../bloc/transaction/transaction_state.dart';
@@ -10,7 +9,6 @@ import '../widgets/transaction_list_item.dart';
 import '../widgets/add_transaction_fab.dart';
 import 'transaction_edit_page.dart';
 import 'transaction_history_page.dart';
-import '../../constants/assets.dart';
 import 'add_transaction_page.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -47,10 +45,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => TransactionEditPage(
-          isEdit: true,
-          transaction: transaction,
-        ),
+        builder: (context) =>
+            TransactionEditPage(isEdit: true, transaction: transaction),
       ),
     );
     if (result == true) {
@@ -128,23 +124,28 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           }
 
           if (state is TransactionLoaded) {
+            final txs = widget.isIncome
+                ? (state.incomeTransactions ?? [])
+                : (state.expenseTransactions ?? []);
+
+            final total = widget.isIncome
+                ? state.totalIncomeAmount
+                : state.totalExpenseAmount;
+
             return Column(
               children: [
-                _TotalSection(
-                  totalAmount: state.totalAmount,
-                  isIncome: widget.isIncome,
-                ),
+                _TotalSection(totalAmount: total, isIncome: widget.isIncome),
                 const Divider(height: 1),
                 Expanded(
-                  child: state.transactions.isEmpty
+                  child: txs.isEmpty
                       ? _EmptyState(isIncome: widget.isIncome)
                       : ListView.builder(
-                          itemCount: state.transactions.length,
+                          itemCount: txs.length,
                           itemBuilder: (context, index) {
                             return TransactionListItem(
-                              transaction: state.transactions[index],
+                              transaction: txs[index],
                               onTap: () {
-                                _editTransaction(state.transactions[index]);
+                                _editTransaction(txs[index]);
                               },
                             );
                           },
