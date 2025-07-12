@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
+import 'network/isolates/isolate_manager.dart';
 import 'cubit/account/account_cubit.dart';
 import 'data/repositories/drift_transaction_repository.dart';
 import 'data/source/local/database.dart';
@@ -69,7 +70,10 @@ class ConnectivityProvider extends ChangeNotifier {
   }
 }
 
-void main() {
+void main() async {
+  // Initialize worker manager for isolates
+  await IsolateManager.initialize();
+  
   runApp(ChangeNotifierProvider(
     create: (_) => ConnectivityProvider(),
     child: const FinanceApp(),

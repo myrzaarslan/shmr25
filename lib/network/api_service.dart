@@ -3,6 +3,7 @@ import 'package:finance_app/domain/models/transaction.dart';
 import 'package:finance_app/domain/models/bank_account.dart';
 import 'package:finance_app/domain/models/category.dart';
 import 'package:finance_app/domain/models/account_history.dart';
+import 'isolates/isolate_manager.dart';
 
 class ApiService {
   final Dio _dio;
@@ -23,7 +24,7 @@ class ApiService {
 
   Future<TransactionWithDetails> getTransactionById(int id) async {
     final response = await _dio.get('/transactions/$id');
-    return TransactionWithDetails.fromJson(response.data);
+    return await IsolateManager.parseSingleTransactionInIsolate(response.data);
   }
 
   Future<TransactionWithDetails> updateTransaction(
@@ -37,7 +38,7 @@ class ApiService {
       'transactionDate': request.transactionDate.toIso8601String(),
       'comment': request.comment,
     });
-    return TransactionWithDetails.fromJson(response.data);
+    return await IsolateManager.parseSingleTransactionInIsolate(response.data);
   }
 
   Future<void> deleteTransaction(int id) async {
@@ -62,17 +63,13 @@ class ApiService {
       queryParameters: queryParams,
     );
     
-    return (response.data as List)
-        .map((json) => TransactionWithDetails.fromJson(json))
-        .toList();
+    return await IsolateManager.parseTransactionsInIsolate(response.data as List);
   }
 
   // Account endpoints
   Future<List<BankAccount>> getAllAccounts() async {
     final response = await _dio.get('/accounts');
-    return (response.data as List)
-        .map((json) => BankAccount.fromJson(json))
-        .toList();
+    return await IsolateManager.parseAccountsInIsolate(response.data as List);
   }
 
   Future<BankAccount> createAccount(CreateBankAccountRequest request) async {
@@ -81,7 +78,7 @@ class ApiService {
       'balance': request.balance,
       'currency': request.currency,
     });
-    return BankAccount.fromJson(response.data);
+    return await IsolateManager.parseSingleAccountInIsolate(response.data);
   }
 
   Future<BankAccountWithStats> getAccountById(int id) async {
@@ -98,7 +95,7 @@ class ApiService {
       'balance': request.balance,
       'currency': request.currency,
     });
-    return BankAccount.fromJson(response.data);
+    return await IsolateManager.parseSingleAccountInIsolate(response.data);
   }
 
   Future<void> deleteAccount(int id) async {
@@ -113,15 +110,11 @@ class ApiService {
   // Category endpoints
   Future<List<Category>> getAllCategories() async {
     final response = await _dio.get('/categories');
-    return (response.data as List)
-        .map((json) => Category.fromJson(json))
-        .toList();
+    return await IsolateManager.parseCategoriesInIsolate(response.data as List);
   }
 
   Future<List<Category>> getCategoriesByType(bool isIncome) async {
     final response = await _dio.get('/categories/type/$isIncome');
-    return (response.data as List)
-        .map((json) => Category.fromJson(json))
-        .toList();
+    return await IsolateManager.parseCategoriesInIsolate(response.data as List);
   }
 }

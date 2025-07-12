@@ -1,4 +1,63 @@
 import 'package:dio/dio.dart';
+import 'dart:math';
+
+class ExponentialBackoffInterceptor extends Interceptor {
+  final int maxRetries;
+  final Duration baseDelay;
+  final double backoffMultiplier;
+  final double jitterFactor;
+
+  ExponentialBackoffInterceptor({
+    this.maxRetries = 3,
+    this.baseDelay = const Duration(milliseconds: 500),
+    this.backoffMultiplier = 2.0,
+    this.jitterFactor = 0.1,
+  });
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final statusCode = err.response?.statusCode;
+    final shouldRetry = _shouldRetry(statusCode);
+    final retryCount = _getRetryCount(err.requestOptions);
+
+    if (shouldRetry && retryCount < maxRetries) {
+      final delay = _calculateDelay(retryCount);
+      print('Retrying request after ${delay.inMilliseconds}ms (attempt ${retryCount + 1}/$maxRetries)');
+      
+      await Future.delayed(delay);
+      
+      // Update retry count
+      err.requestOptions.extra['retryCount'] = retryCount + 1;
+      
+      // Retry the request
+      try {
+        final response = await Dio().fetch(err.requestOptions);
+        return handler.resolve(response);
+      } catch (e) {
+        return handler.next(err);
+      }
+    }
+
+    return handler.next(err);
+  }
+
+  bool _shouldRetry(int? statusCode) {
+    if (statusCode == null) return false;
+    return [500, 502, 503, 504, 408, 429].contains(statusCode);
+  }
+
+  int _getRetryCount(RequestOptions options) {
+    return options.extra['retryCount'] ?? 0;
+  }
+
+  Duration _calculateDelay(int retryCount) {
+    final exponentialDelay = baseDelay.inMilliseconds * pow(backoffMultiplier, retryCount);
+    final jitter = exponentialDelay * jitterFactor * (Random().nextDouble() * 2 - 1);
+    final finalDelay = exponentialDelay + jitter;
+    
+    return Duration(milliseconds: finalDelay.round());
+  }
+}
 
 class DioClient {
   static Dio create() {
@@ -12,9 +71,15 @@ class DioClient {
       ),
     );
 
+    // Add exponential backoff interceptor first
+    dio.interceptors.add(ExponentialBackoffInterceptor());
+
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
+          // Initialize retry count
+          options.extra['retryCount'] = 0;
+          
           // Добавляем Bearer Token
           options.headers['Authorization'] = 'Bearer 1lrlKpjKgdAQ7FZsIDbhopm5';
           return handler.next(options);
