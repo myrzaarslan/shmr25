@@ -20,10 +20,27 @@ import 'data/repositories/drift_category_repository.dart';
 class ConnectivityProvider extends ChangeNotifier {
   bool _isOffline = false;
   bool get isOffline => _isOffline;
+  bool _serverOffline = false;
+  bool get serverOffline => _serverOffline;
   late final StreamSubscription _subscription;
 
   ConnectivityProvider() {
     _initializeConnectivity();
+  }
+
+  // Manual toggle for testing
+  void toggleOffline() {
+    _isOffline = !_isOffline;
+    print('[ConnectivityProvider] Manual toggle: isOffline=$_isOffline');
+    notifyListeners();
+  }
+
+  void setServerOffline(bool value) {
+    if (_serverOffline != value) {
+      _serverOffline = value;
+      print('[ConnectivityProvider] Server offline set to $_serverOffline');
+      notifyListeners();
+    }
   }
 
   Future<void> _initializeConnectivity() async {
@@ -71,6 +88,9 @@ class ConnectivityProvider extends ChangeNotifier {
 }
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final result = await Connectivity().checkConnectivity();
+  print('[TEST] Initial connectivity: $result');
   // Initialize worker manager for isolates
   await IsolateManager.initialize();
   

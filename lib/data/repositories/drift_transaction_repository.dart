@@ -85,8 +85,9 @@ class DriftTransactionRepository implements TransactionRepository {
       
       return syncedTransaction;
     } catch (e) {
-      // If sync fails, return local transaction (offline mode)
-      return transaction;
+      // If sync fails, throw error to UI but keep local transaction
+      print('Failed to sync transaction to backend: $e');
+      throw Exception('Failed to sync transaction: $e');
     }
   }
 
@@ -183,9 +184,9 @@ class DriftTransactionRepository implements TransactionRepository {
       
       return syncedTransaction;
     } catch (e) {
-      // If sync fails, return local transaction
-      final transaction = await getTransactionById(id);
-      return transaction;
+      // If sync fails, throw error to UI but keep local transaction
+      print('Failed to sync transaction update to backend: $e');
+      throw Exception('Failed to sync transaction update: $e');
     }
   }
 
@@ -210,7 +211,9 @@ class DriftTransactionRepository implements TransactionRepository {
       // Remove from backup storage on successful sync
       await _backupStorage.removeEvent(id.toString(), BackupEventType.delete, BackupTargetType.transaction);
     } catch (e) {
-      // If sync fails, keep in backup storage for later sync
+      // If sync fails, throw error to UI but keep in backup storage
+      print('Failed to sync transaction deletion to backend: $e');
+      throw Exception('Failed to sync transaction deletion: $e');
     }
   }
 

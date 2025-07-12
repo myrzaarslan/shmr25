@@ -1,5 +1,9 @@
 import 'package:dio/dio.dart';
 import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../routing/app_router.dart';
+import '../main.dart';
 
 class ExponentialBackoffInterceptor extends Interceptor {
   final int maxRetries;
@@ -84,9 +88,25 @@ class DioClient {
           options.headers['Authorization'] = 'Bearer 1lrlKpjKgdAQ7FZsIDbhopm5';
           return handler.next(options);
         },
+        onResponse: (response, handler) {
+          final context = rootNavigatorKey.currentContext;
+          if (context != null) {
+            final provider = Provider.of<ConnectivityProvider>(context, listen: false);
+            provider.setServerOffline(false);
+          }
+          return handler.next(response);
+        },
         onError: (DioException e, handler) {
           // обработка ошибок (опционально)
-          print('Dio error: ${e.response?.statusCode} ${e.message}');
+          print('Dio error:  [31m${e.response?.statusCode} [0m ${e.message}');
+          final statusCode = e.response?.statusCode;
+          if ([500, 502, 503, 504].contains(statusCode)) {
+            final context = rootNavigatorKey.currentContext;
+            if (context != null) {
+              final provider = Provider.of<ConnectivityProvider>(context, listen: false);
+              provider.setServerOffline(true);
+            }
+          }
           return handler.next(e);
         },
       ),

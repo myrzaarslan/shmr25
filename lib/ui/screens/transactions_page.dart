@@ -112,7 +112,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ),
       body: Column(
         children: [
-          OfflineBanner(isOffline: isOffline),
           Expanded(
             child: _syncing
                 ? const Center(child: CircularProgressIndicator())

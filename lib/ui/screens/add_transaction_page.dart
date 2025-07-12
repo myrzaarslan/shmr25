@@ -172,6 +172,9 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       _showValidationDialog();
       return;
     }
+    
+    setState(() => _loading = true);
+    
     final repo = context.read<TransactionRepository>();
     final amount = _amountController.text.trim().replaceAll(_decimalSeparator, '.');
     final comment = _commentController.text.trim().isEmpty ? null : _commentController.text.trim();
@@ -194,7 +197,10 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       );
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      _showErrorDialog(e.toString());
+      if (mounted) {
+        setState(() => _loading = false);
+        _showErrorDialog(e.toString());
+      }
     }
   }
 
@@ -232,10 +238,19 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.check, color: Colors.black),
-            onPressed: _saveTransaction,
-          ),
+          _loading
+              ? const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.check, color: Colors.black),
+                  onPressed: _saveTransaction,
+                ),
         ],
       ),
       body: SingleChildScrollView(
