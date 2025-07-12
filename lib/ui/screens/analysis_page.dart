@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../data/repositories/mock_transaction_repository.dart';
 import '../../domain/models/transaction.dart';
 import '../../features/pie_chart_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/repositories/transaction_repository.dart';
 
 class AnalysisPage extends StatefulWidget {
   final bool isIncome;
@@ -15,7 +16,6 @@ class AnalysisPage extends StatefulWidget {
 }
 
 class _AnalysisPageState extends State<AnalysisPage> {
-  final _repo = MockTransactionRepository();
   late DateTime _startDate;
   late DateTime _endDate;
   bool _loading = true;
@@ -34,7 +34,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final txs = await _repo.getTransactionsByAccountAndPeriod(
+    final repo = context.read<TransactionRepository>();
+    final txs = await repo.getTransactionsByAccountAndPeriod(
       widget.accountId,
       startDate: _startDate,
       endDate: _endDate,

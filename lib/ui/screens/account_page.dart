@@ -10,6 +10,8 @@ import '../../cubit/currency/currency_cubit.dart';
 import '../../constants/currency_field.dart';
 import '../../ui/widgets/app_bar.dart';
 import '../../ui/widgets/account_chart.dart';
+import '../../domain/repositories/bank_account_repository.dart';
+import '../../domain/models/bank_account.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -43,15 +45,28 @@ class _AccountViewState extends State<_AccountView> {
     (i) => '${(i + 1).toString().padLeft(2, '0')}.${DateTime.now().month.toString().padLeft(2, '0')}',
   );
 
+  BankAccount? _account;
+  bool _loading = true;
+
   @override
   void initState() {
     super.initState();
     _accelSub = accelerometerEvents.listen(_handleAccel);
-
+    _loadAccount();
     // Example: generate mock transactions
     for (int i = 0; i < _days.length; i++) {
       _days[i] = i % 2 == 0 ? i * 1000.0 : -i * 500.0;
     }
+  }
+
+  Future<void> _loadAccount() async {
+    setState(() => _loading = true);
+    final repo = context.read<BankAccountRepository>();
+    final accounts = await repo.getAllAccounts();
+    setState(() {
+      _account = accounts.isNotEmpty ? accounts.first : null;
+      _loading = false;
+    });
   }
 
   void _handleAccel(AccelerometerEvent event) {
@@ -117,7 +132,7 @@ class _AccountViewState extends State<_AccountView> {
     final currency = context.watch<CurrencyCubit>().state.symbol;
     return Scaffold(
       appBar: Appbar(
-        title: context.watch<AccountCubit>().state.accountName,
+        title: _account?.name ?? 'Счёт',
         actions: [
           IconButton(
             icon: Icon(
@@ -132,32 +147,35 @@ class _AccountViewState extends State<_AccountView> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _AccountListItem(hidden: _hidden),
-          const Divider(height: 0),
-          const _BalanceListItem(),
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: AccountChart(
-              values: _days,
-              labels: _labels,
-              currency: currency,
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                _AccountListItem(hidden: _hidden, account: _account),
+                const Divider(height: 0),
+                const _BalanceListItem(),
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: AccountChart(
+                    values: _days,
+                    labels: _labels,
+                    currency: currency,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
 
 class _AccountListItem extends StatelessWidget {
   final bool hidden;
-  const _AccountListItem({required this.hidden});
+  final BankAccount? account;
+  const _AccountListItem({required this.hidden, required this.account});
 
   @override
   Widget build(BuildContext context) {
-    final balance = '60 000';
+    final balance = account?.balance ?? '0.00';
     final currency = context.watch<CurrencyCubit>().state.symbol;
     return ListTile(
       leading: const CircleAvatar(

@@ -13,6 +13,7 @@ class TransactionLoaded extends TransactionState {
   final double totalIncomeAmount;
   final double totalExpenseAmount;
   final SortField sortBy;
+  final bool isOffline; // Add offline mode detection
 
   TransactionLoaded({
     required this.incomeTransactions,
@@ -20,6 +21,7 @@ class TransactionLoaded extends TransactionState {
     required this.totalIncomeAmount,
     required this.totalExpenseAmount,
     this.sortBy = SortField.date,
+    this.isOffline = false, // Default to online mode
   });
 
   TransactionLoaded copyWith({
@@ -28,6 +30,7 @@ class TransactionLoaded extends TransactionState {
     double? totalIncomeAmount,
     double? totalExpenseAmount,
     SortField? sortBy,
+    bool? isOffline,
   }) {
     return TransactionLoaded(
       incomeTransactions: incomeTransactions ?? this.incomeTransactions,
@@ -35,6 +38,7 @@ class TransactionLoaded extends TransactionState {
       totalIncomeAmount: totalIncomeAmount ?? this.totalIncomeAmount,
       totalExpenseAmount: totalExpenseAmount ?? this.totalExpenseAmount,
       sortBy: sortBy ?? this.sortBy,
+      isOffline: isOffline ?? this.isOffline,
     );
   }
 
@@ -47,7 +51,8 @@ class TransactionLoaded extends TransactionState {
             expenseTransactions == other.expenseTransactions &&
             totalIncomeAmount == other.totalIncomeAmount &&
             totalExpenseAmount == other.totalExpenseAmount &&
-            sortBy == other.sortBy;
+            sortBy == other.sortBy &&
+            isOffline == other.isOffline;
   }
 
   @override
@@ -56,7 +61,8 @@ class TransactionLoaded extends TransactionState {
       expenseTransactions.hashCode ^
       totalIncomeAmount.hashCode ^
       totalExpenseAmount.hashCode ^
-      sortBy.hashCode;
+      sortBy.hashCode ^
+      isOffline.hashCode;
 }
 
 class TransactionError extends TransactionState {

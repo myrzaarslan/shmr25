@@ -9,7 +9,7 @@ abstract class Category with _$Category {
     required int id,
     required String name,
     required String emoji,
-    required int backgroundColor,
+    @Default(0xFF2196F3) int backgroundColor, // Default blue color
     required bool isIncome,
   }) = _Category;
 

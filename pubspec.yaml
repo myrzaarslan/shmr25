@@ -24,6 +24,8 @@ dependencies:
   fl_chart: ^0.66.0
   dio: ^5.8.0+1
   drift_dev: ^2.27.0
+  connectivity_plus: ^6.1.4
+  provider: ^6.1.5
 
 dev_dependencies:
   flutter_test:

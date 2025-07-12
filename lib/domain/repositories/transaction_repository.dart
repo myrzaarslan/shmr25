@@ -13,4 +13,7 @@ abstract class TransactionRepository {
     DateTime? startDate,
     DateTime? endDate,
   });
+  
+  /// Check if there are unsynced events (for offline mode detection)
+  Future<bool> hasUnsyncedEvents();
 }

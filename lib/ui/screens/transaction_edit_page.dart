@@ -4,10 +4,11 @@ import 'package:intl/intl.dart';
 import '../../domain/models/transaction.dart';
 import '../../domain/models/category.dart';
 import '../../domain/models/bank_account.dart';
-import '../../data/repositories/mock_transaction_repository.dart';
-import '../../data/repositories/mock_category_repository.dart';
-import '../../data/repositories/mock_bank_account_repository.dart';
 import '../widgets/app_bar.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/repositories/transaction_repository.dart';
+import '../../domain/repositories/category_repository.dart';
+import '../../domain/repositories/bank_account_repository.dart';
 
 class TransactionEditPage extends StatefulWidget {
   final bool isEdit;
@@ -49,8 +50,8 @@ class _TransactionEditPageState extends State<TransactionEditPage> {
   }
 
   Future<void> _loadData() async {
-    final categoryRepo = MockCategoryRepository();
-    final accountRepo = MockBankAccountRepository();
+    final categoryRepo = context.read<CategoryRepository>();
+    final accountRepo = context.read<BankAccountRepository>();
     final categories = await categoryRepo.getAllCategories();
     final accounts = await accountRepo.getAllAccounts();
     setState(() {
@@ -184,7 +185,7 @@ class _TransactionEditPageState extends State<TransactionEditPage> {
       _showValidationDialog();
       return;
     }
-    final repo = MockTransactionRepository();
+    final repo = context.read<TransactionRepository>();
     final amount = _amountController.text.trim().replaceAll(_decimalSeparator, '.');
     final comment = _commentController.text.trim().isEmpty ? null : _commentController.text.trim();
     final dateTime = DateTime(
@@ -241,7 +242,7 @@ class _TransactionEditPageState extends State<TransactionEditPage> {
 
   Future<void> _deleteTransaction() async {
     if (!widget.isEdit || widget.transaction == null) return;
-    final repo = MockTransactionRepository();
+    final repo = context.read<TransactionRepository>();
     try {
       await repo.deleteTransaction(widget.transaction!.id);
       if (mounted) Navigator.pop(context, true);

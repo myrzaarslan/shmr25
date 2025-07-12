@@ -26,7 +26,19 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (migrator, from, to) async {
+      if (from == 1) {
+        await migrator.createTable(backupEvents);
+      }
+    },
+    onCreate: (migrator) async {
+      await migrator.createAll();
+    },
+  );
 
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {

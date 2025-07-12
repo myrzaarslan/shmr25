@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../domain/models/category.dart';
-import '../../data/repositories/mock_category_repository.dart';
+import '../../domain/repositories/category_repository.dart';
 import 'dart:async';
 import 'package:finance_app/ui/widgets/app_bar.dart';
 import 'package:fuzzy/fuzzy.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
@@ -13,7 +14,7 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
-  final _repo = MockCategoryRepository();
+  late final CategoryRepository _repo;
   final TextEditingController _controller = TextEditingController();
   List<Category> _allCategories = [];
   List<Category> _filteredCategories = [];
@@ -23,6 +24,7 @@ class _CategoryPageState extends State<CategoryPage> {
   @override
   void initState() {
     super.initState();
+    _repo = context.read<CategoryRepository>();
     _loadCategories();
     _controller.addListener(_onSearchChanged);
   }
