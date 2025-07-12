@@ -1,3 +1,4 @@
+export 'app_router.dart' show rootNavigatorKey;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/root/root_scaffold.dart';
@@ -7,11 +8,11 @@ import '../ui/screens/expenses_page.dart';
 import '../ui/screens/income_page.dart';
 import '../ui/screens/settings_page.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final goRouter = GoRouter(
   initialLocation: '/expenses',
-  navigatorKey: _rootNavigatorKey,
+  navigatorKey: rootNavigatorKey,
   routes: [
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>

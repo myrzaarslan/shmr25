@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'drift_tables.dart';
+import 'package:finance_app/data/source/local/backup_storage.dart';
 
 part 'database.g.dart';
 
@@ -15,13 +16,29 @@ part 'database.g.dart';
     AccountHistories,
     AccountHistoryItems,
     AccountStates,
+    BackupEvents, // Register BackupEvents table
+  ],
+  daos: [
+    BackupStorage, // Register BackupStorage DAO
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (migrator, from, to) async {
+      if (from == 1) {
+        await migrator.createTable(backupEvents);
+      }
+    },
+    onCreate: (migrator) async {
+      await migrator.createAll();
+    },
+  );
 
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {

@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/repositories/transaction_repository.dart';
-import '../../../domain/repositories/category_repository.dart';
+import '../../domain/repositories/transaction_repository.dart';
+import '../../domain/repositories/category_repository.dart';
 import '../../domain/models/transaction.dart';
 import 'transaction_event.dart';
 import 'transaction_state.dart';
@@ -44,7 +44,19 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           .where((tx) => tx.category.isIncome == event.isIncome)
           .toList();
 
+      print('Loaded transactions from local DB:');
+      for (final tx in transactions) {
+        print('id= [32m [1m [4m${tx.id} [0m, date=${tx.transactionDate}, isIncome=${tx.category.isIncome}, amount=${tx.amount}, categoryId=${tx.category.id}');
+      }
+      print('Filtered transactions for today (isIncome=${event.isIncome}):');
+      for (final tx in filteredTransactions) {
+        print('id=${tx.id}, date=${tx.transactionDate}, isIncome=${tx.category.isIncome}, amount=${tx.amount}, categoryId=${tx.category.id}');
+      }
+
       final totalAmount = _calculateTotalAmount(filteredTransactions);
+
+      // Check if we're in offline mode
+      final isOffline = await _transactionRepository.hasUnsyncedEvents();
 
       if (state is TransactionLoaded) {
         final current = state as TransactionLoaded;
@@ -63,6 +75,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
             totalExpenseAmount: event.isIncome
                 ? current.totalExpenseAmount
                 : totalAmount,
+            isOffline: isOffline,
           ),
         );
       } else {
@@ -72,6 +85,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
             expenseTransactions: event.isIncome ? [] : filteredTransactions,
             totalIncomeAmount: event.isIncome ? totalAmount : 0.0,
             totalExpenseAmount: event.isIncome ? 0.0 : totalAmount,
+            isOffline: isOffline,
           ),
         );
       }
@@ -124,6 +138,9 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
       final totalAmount = _calculateTotalAmount(filteredTransactions);
 
+      // Check if we're in offline mode
+      final isOffline = await _transactionRepository.hasUnsyncedEvents();
+
       if (state is TransactionLoaded) {
         final current = state as TransactionLoaded;
 
@@ -142,6 +159,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
                 ? current.totalExpenseAmount
                 : totalAmount,
             sortBy: event.sortBy,
+            isOffline: isOffline,
           ),
         );
       } else {
@@ -152,6 +170,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
             totalIncomeAmount: event.isIncome ? totalAmount : 0.0,
             totalExpenseAmount: event.isIncome ? 0.0 : totalAmount,
             sortBy: event.sortBy,
+            isOffline: isOffline,
           ),
         );
       }
@@ -166,7 +185,15 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     try {
       await _transactionRepository.createTransaction(event.request);
-      emit(TransactionOperationSuccess('Транзакция успешно добавлена'));
+      
+      // Check if we're in offline mode after operation
+      final isOffline = await _transactionRepository.hasUnsyncedEvents();
+      
+      if (isOffline) {
+        emit(TransactionOperationSuccess('Транзакция добавлена (офлайн режим)'));
+      } else {
+        emit(TransactionOperationSuccess('Транзакция успешно добавлена'));
+      }
     } catch (e) {
       emit(TransactionError('Ошибка добавления транзакции: ${e.toString()}'));
     }
@@ -178,7 +205,15 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     try {
       await _transactionRepository.updateTransaction(event.id, event.request);
-      emit(TransactionOperationSuccess('Транзакция успешно обновлена'));
+      
+      // Check if we're in offline mode after operation
+      final isOffline = await _transactionRepository.hasUnsyncedEvents();
+      
+      if (isOffline) {
+        emit(TransactionOperationSuccess('Транзакция обновлена (офлайн режим)'));
+      } else {
+        emit(TransactionOperationSuccess('Транзакция успешно обновлена'));
+      }
     } catch (e) {
       emit(TransactionError('Ошибка обновления транзакции: ${e.toString()}'));
     }
@@ -190,7 +225,15 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     try {
       await _transactionRepository.deleteTransaction(event.id);
-      emit(TransactionOperationSuccess('Транзакция успешно удалена'));
+      
+      // Check if we're in offline mode after operation
+      final isOffline = await _transactionRepository.hasUnsyncedEvents();
+      
+      if (isOffline) {
+        emit(TransactionOperationSuccess('Транзакция удалена (офлайн режим)'));
+      } else {
+        emit(TransactionOperationSuccess('Транзакция успешно удалена'));
+      }
     } catch (e) {
       emit(TransactionError('Ошибка удаления транзакции: ${e.toString()}'));
     }

@@ -5,8 +5,9 @@ import '../../domain/models/transaction.dart';
 class TransactionListItem extends StatelessWidget {
   final TransactionWithDetails transaction;
   final VoidCallback? onTap;
+  final bool isUnsynced;
 
-  const TransactionListItem({super.key, required this.transaction, this.onTap});
+  const TransactionListItem({super.key, required this.transaction, this.onTap, this.isUnsynced = false});
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +36,8 @@ class TransactionListItem extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (isUnsynced)
+            const Icon(Icons.sync_problem, color: Colors.orange, size: 18),
           Text(
             _formatAmount(transaction.amount, transaction.category.isIncome),
             style: TextStyle(

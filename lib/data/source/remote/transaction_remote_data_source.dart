@@ -1,6 +1,6 @@
-import '../models/transaction.dart';
+import 'package:finance_app/domain/models/transaction.dart';
 
-abstract class TransactionRepository {
+abstract class TransactionRemoteDataSource {
   Future<Transaction> createTransaction(CreateTransactionRequest request);
   Future<TransactionWithDetails> getTransactionById(int id);
   Future<TransactionWithDetails> updateTransaction(
@@ -13,7 +13,4 @@ abstract class TransactionRepository {
     DateTime? startDate,
     DateTime? endDate,
   });
-  
-  /// Check if there are unsynced events (for offline mode detection)
-  Future<bool> hasUnsyncedEvents();
 }

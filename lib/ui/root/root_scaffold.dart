@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../main.dart';
 
 class RootScaffold extends StatelessWidget {
   const RootScaffold({super.key, required this.navigationShell});
@@ -16,8 +18,14 @@ class RootScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final connectivityProvider = context.watch<ConnectivityProvider>();
+    final showOfflineBanner = connectivityProvider.isOffline || connectivityProvider.serverOffline;
     return Scaffold(
-      body: navigationShell,
+      body: Column(
+        children: [
+          Expanded(child: navigationShell),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: _goBranch,

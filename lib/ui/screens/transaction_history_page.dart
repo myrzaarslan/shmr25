@@ -1,12 +1,10 @@
 import 'package:finance_app/bloc/transaction/transaction_bloc.dart';
 import 'package:finance_app/bloc/transaction/transaction_event.dart';
 import 'package:finance_app/bloc/transaction/transaction_state.dart';
-import 'package:finance_app/data/repositories/mock_category_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import '../../data/repositories/mock_transaction_repository.dart';
 import '../widgets/app_bar.dart';
 import '../../constants/sort_field.dart';
 import '../../constants/assets.dart';
@@ -14,25 +12,19 @@ import 'analysis_page.dart';
 import '../../domain/models/transaction.dart';
 import 'transaction_edit_page.dart';
 
-class TransactionHistoryScreen extends StatelessWidget {
+class TransactionHistoryPage extends StatelessWidget {
   final bool isIncome;
   final int accountId;
 
-  const TransactionHistoryScreen({
+  const TransactionHistoryPage({
     super.key,
     required this.isIncome,
-    this.accountId = 1,
+    this.accountId = 144,
   });
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => TransactionBloc(
-        transactionRepository: MockTransactionRepository(),
-        categoryRepository: MockCategoryRepository(),
-      ),
-      child: TransactionHistoryView(isIncome: isIncome, accountId: accountId),
-    );
+    return TransactionHistoryView(isIncome: isIncome, accountId: accountId);
   }
 }
 
@@ -43,7 +35,7 @@ class TransactionHistoryView extends StatefulWidget {
   const TransactionHistoryView({
     super.key,
     required this.isIncome,
-    this.accountId = 1,
+    this.accountId = 144,
   });
 
   @override
@@ -243,7 +235,7 @@ class _TransactionListView extends StatelessWidget {
       // Обновляем список транзакций
       context.read<TransactionBloc>().add(
         LoadTransactionsForPeriod(
-          accountId: 1, // TODO: передавать accountId
+          accountId: 144, // Use the correct accountId
           isIncome: isIncome,
           startDate: DateTime.now().subtract(const Duration(days: 30)),
           endDate: DateTime.now(),

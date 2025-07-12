@@ -10,6 +10,9 @@ import '../../cubit/currency/currency_cubit.dart';
 import '../../constants/currency_field.dart';
 import '../../ui/widgets/app_bar.dart';
 import '../../ui/widgets/account_chart.dart';
+import '../../domain/repositories/bank_account_repository.dart';
+import '../../domain/models/bank_account.dart';
+import '../../domain/repositories/transaction_repository.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -37,21 +40,64 @@ class _AccountViewState extends State<_AccountView> {
   List<double> _lastAccel = [0, 0, 0];
   static const double shakeThreshold = 15.0;
 
-  final List<double> _days = List.filled(30, 0);
-  final List<String> _labels = List.generate(
+  List<double> _incomes = List.filled(30, 0);
+  List<double> _expenses = List.filled(30, 0);
+  List<String> _labels = List.generate(
     30,
     (i) => '${(i + 1).toString().padLeft(2, '0')}.${DateTime.now().month.toString().padLeft(2, '0')}',
   );
+
+  BankAccount? _account;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _accelSub = accelerometerEvents.listen(_handleAccel);
+    _loadAccountAndTransactions();
+  }
 
-    // Example: generate mock transactions
-    for (int i = 0; i < _days.length; i++) {
-      _days[i] = i % 2 == 0 ? i * 1000.0 : -i * 500.0;
+  Future<void> _loadAccountAndTransactions() async {
+    setState(() => _loading = true);
+    final accountRepo = context.read<BankAccountRepository>();
+    final txRepo = context.read<TransactionRepository>();
+    final accounts = await accountRepo.getAllAccounts();
+    final account = accounts.isNotEmpty ? accounts.first : null;
+    if (account == null) {
+      setState(() {
+        _account = null;
+        _loading = false;
+      });
+      return;
     }
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, 1);
+    final txs = await txRepo.getTransactionsByAccountAndPeriod(
+      account.id,
+      startDate: start,
+      endDate: now,
+    );
+    // Group by day
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    _labels = List.generate(
+      daysInMonth,
+      (i) => '${(i + 1).toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}',
+    );
+    _incomes = List.filled(daysInMonth, 0);
+    _expenses = List.filled(daysInMonth, 0);
+    for (final tx in txs) {
+      final day = tx.transactionDate.day - 1;
+      final amount = double.tryParse(tx.amount) ?? 0;
+      if (tx.category.isIncome) {
+        _incomes[day] += amount;
+      } else {
+        _expenses[day] += amount;
+      }
+    }
+    setState(() {
+      _account = account;
+      _loading = false;
+    });
   }
 
   void _handleAccel(AccelerometerEvent event) {
@@ -117,7 +163,7 @@ class _AccountViewState extends State<_AccountView> {
     final currency = context.watch<CurrencyCubit>().state.symbol;
     return Scaffold(
       appBar: Appbar(
-        title: context.watch<AccountCubit>().state.accountName,
+        title: _account?.name ?? 'Счёт',
         actions: [
           IconButton(
             icon: Icon(
@@ -132,32 +178,36 @@ class _AccountViewState extends State<_AccountView> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _AccountListItem(hidden: _hidden),
-          const Divider(height: 0),
-          const _BalanceListItem(),
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: AccountChart(
-              values: _days,
-              labels: _labels,
-              currency: currency,
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                _AccountListItem(hidden: _hidden, account: _account),
+                const Divider(height: 0),
+                const _BalanceListItem(),
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: AccountChart(
+                    incomes: _incomes,
+                    expenses: _expenses,
+                    labels: _labels,
+                    currency: currency,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
 
 class _AccountListItem extends StatelessWidget {
   final bool hidden;
-  const _AccountListItem({required this.hidden});
+  final BankAccount? account;
+  const _AccountListItem({required this.hidden, required this.account});
 
   @override
   Widget build(BuildContext context) {
-    final balance = '60 000';
+    final balance = account?.balance ?? '0.00';
     final currency = context.watch<CurrencyCubit>().state.symbol;
     return ListTile(
       leading: const CircleAvatar(

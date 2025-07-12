@@ -52,3 +52,12 @@ class AccountStates extends Table {
   TextColumn get balance => text()();
   TextColumn get currency => text()();
 }
+
+class BackupEvents extends Table {
+  TextColumn get id => text()();
+  TextColumn get eventJson => text()();
+  DateTimeColumn get timestamp => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

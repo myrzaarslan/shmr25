@@ -3,20 +3,25 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class AccountChart extends StatelessWidget {
-  final List<double> values;
+  final List<double> incomes;
+  final List<double> expenses;
   final List<String> labels;
   final String currency;
 
   const AccountChart({
     super.key,
-    required this.values,
+    required this.incomes,
+    required this.expenses,
     required this.labels,
     required this.currency,
   });
 
   @override
   Widget build(BuildContext context) {
-    final maxY = values.isEmpty ? 1 : values.map((e) => e.abs()).reduce(max);
+    final maxY = [
+      ...incomes.map((e) => e.abs()),
+      ...expenses.map((e) => e.abs()),
+    ].fold<double>(0, (prev, e) => e > prev ? e : prev);
     return AspectRatio(
       aspectRatio: 1.7,
       child: BarChart(
@@ -42,11 +47,9 @@ class AccountChart extends StatelessWidget {
         tooltipMargin: 8,
         getTooltipItem: (group, groupIndex, rod, rodIndex) {
           return BarTooltipItem(
-            rod.toY == 1
-                ? '0 $currency'
-                : '${rod.toY.toStringAsFixed(2)} $currency',
-            const TextStyle(
-              color: Colors.black,
+            '${rod.toY.toStringAsFixed(2)} $currency',
+            TextStyle(
+              color: rod.color == Colors.green ? Colors.green : Colors.red,
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),
@@ -66,8 +69,8 @@ class AccountChart extends StatelessWidget {
           getTitlesWidget: (value, meta) {
             final index = value.toInt();
             if (index == 0 ||
-                index == values.length ~/ 2 ||
-                index == values.length - 1) {
+                index == labels.length ~/ 2 ||
+                index == labels.length - 1) {
               return SideTitleWidget(
                 axisSide: meta.axisSide,
                 space: 4,
@@ -92,18 +95,22 @@ class AccountChart extends StatelessWidget {
   }
 
   List<BarChartGroupData> _barGroups() {
-    return List.generate(values.length, (i) {
-      final val = values[i];
+    return List.generate(labels.length, (i) {
       return BarChartGroupData(
         x: i,
         barRods: [
           BarChartRodData(
-            toY: val == 0 ? 1 : val.abs().toDouble(),
-            color: val < 0
-                ? const Color.fromRGBO(255, 95, 0, 1)
-                : const Color.fromRGBO(42, 232, 129, 1),
+            toY: incomes[i],
+            color: Colors.green,
+            width: 7,
+          ),
+          BarChartRodData(
+            toY: -expenses[i],
+            color: Colors.red,
+            width: 7,
           ),
         ],
+        barsSpace: 2,
       );
     });
   }

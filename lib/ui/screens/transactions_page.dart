@@ -10,6 +10,11 @@ import '../widgets/add_transaction_fab.dart';
 import 'transaction_edit_page.dart';
 import 'transaction_history_page.dart';
 import 'add_transaction_page.dart';
+import '../../domain/repositories/transaction_repository.dart';
+import '../../data/repositories/drift_transaction_repository.dart';
+import '../widgets/offline_banner.dart';
+import 'package:provider/provider.dart';
+import '../../../main.dart';
 
 class TransactionsScreen extends StatefulWidget {
   final bool isIncome;
@@ -18,7 +23,7 @@ class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({
     super.key,
     required this.isIncome,
-    this.accountId = 1,
+    this.accountId = 144,
   });
 
   @override
@@ -26,9 +31,32 @@ class TransactionsScreen extends StatefulWidget {
 }
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
+  bool _syncing = false;
+  bool _isOffline = false;
+  Set<int> _unsyncedIds = {};
+
   @override
   void initState() {
     super.initState();
+    _syncAndLoadTransactions();
+  }
+
+  Future<void> _syncAndLoadTransactions() async {
+    setState(() {
+      _syncing = true;
+      _isOffline = false;
+    });
+    final repo = context.read<TransactionRepository>();
+    if (repo is DriftTransactionRepository) {
+      try {
+        await repo.syncFromApi();
+        _unsyncedIds = await repo.getUnsyncedTransactionIds();
+      } catch (e) {
+        setState(() => _isOffline = true);
+        await OfflineBanner.showErrorDialog(context, e.toString());
+      }
+    }
+    setState(() => _syncing = false);
     _loadTransactions();
   }
 
@@ -56,17 +84,23 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isOffline = context.watch<ConnectivityProvider>().isOffline || _isOffline;
     return Scaffold(
       appBar: Appbar(
         title: widget.isIncome ? 'Доходы сегодня' : 'Расходы сегодня',
         actions: [
+          IconButton(
+            icon: Icon(Icons.refresh, size: 24, color: Colors.black),
+            onPressed: _syncAndLoadTransactions,
+            tooltip: 'Обновить',
+          ),
           IconButton(
             icon: Icon(Icons.history, size: 24, color: Colors.black),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => TransactionHistoryScreen(
+                  builder: (context) => TransactionHistoryPage(
                     isIncome: widget.isIncome,
                     accountId: widget.accountId,
                   ),
@@ -76,87 +110,89 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ),
         ],
       ),
-      body: BlocConsumer<TransactionBloc, TransactionState>(
-        listener: (context, state) {
-          if (state is TransactionError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          } else if (state is TransactionOperationSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
-              ),
-            );
-            _loadTransactions();
-          }
-        },
-        builder: (context, state) {
-          if (state is TransactionLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (state is TransactionError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Произошла ошибка',
-                    style: Theme.of(context).textTheme.headlineSmall,
+      body: Column(
+        children: [
+          Expanded(
+            child: _syncing
+                ? const Center(child: CircularProgressIndicator())
+                : BlocConsumer<TransactionBloc, TransactionState>(
+                    listener: (context, state) async {
+                      if (state is TransactionError) {
+                        setState(() => _isOffline = true);
+                        await OfflineBanner.showErrorDialog(context, state.message);
+                      } else if (state is TransactionOperationSuccess) {
+                        setState(() => _isOffline = false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.message),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        _loadTransactions();
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is TransactionLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (state is TransactionError) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.error, size: 64, color: Colors.red),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Произошла ошибка',
+                                style: Theme.of(context).textTheme.headlineSmall,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(state.message),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _loadTransactions,
+                                child: const Text('Повторить'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      if (state is TransactionLoaded) {
+                        final txs = widget.isIncome
+                            ? (state.incomeTransactions ?? [])
+                            : (state.expenseTransactions ?? []);
+                        final total = widget.isIncome
+                            ? state.totalIncomeAmount
+                            : state.totalExpenseAmount;
+                        return Column(
+                          children: [
+                            _TotalSection(totalAmount: total, isIncome: widget.isIncome),
+                            const Divider(height: 1),
+                            Expanded(
+                              child: txs.isEmpty
+                                  ? _EmptyState(isIncome: widget.isIncome)
+                                  : ListView.builder(
+                                      itemCount: txs.length,
+                                      itemBuilder: (context, index) {
+                                        final tx = txs[index];
+                                        return TransactionListItem(
+                                          transaction: tx,
+                                          isUnsynced: _unsyncedIds.contains(tx.id),
+                                          onTap: () {
+                                            _editTransaction(tx);
+                                          },
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ],
+                        );
+                      }
+                      return _EmptyState(isIncome: widget.isIncome);
+                    },
                   ),
-                  const SizedBox(height: 8),
-                  Text(state.message),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _loadTransactions,
-                    child: const Text('Повторить'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (state is TransactionLoaded) {
-            final txs = widget.isIncome
-                ? (state.incomeTransactions ?? [])
-                : (state.expenseTransactions ?? []);
-
-            final total = widget.isIncome
-                ? state.totalIncomeAmount
-                : state.totalExpenseAmount;
-
-            return Column(
-              children: [
-                _TotalSection(totalAmount: total, isIncome: widget.isIncome),
-                const Divider(height: 1),
-                Expanded(
-                  child: txs.isEmpty
-                      ? _EmptyState(isIncome: widget.isIncome)
-                      : ListView.builder(
-                          itemCount: txs.length,
-                          itemBuilder: (context, index) {
-                            return TransactionListItem(
-                              transaction: txs[index],
-                              onTap: () {
-                                _editTransaction(txs[index]);
-                              },
-                            );
-                          },
-                        ),
-                ),
-              ],
-            );
-          }
-
-          return _EmptyState(isIncome: widget.isIncome);
-        },
+          ),
+        ],
       ),
       floatingActionButton: AddTransactionFab(
         isIncome: widget.isIncome,
