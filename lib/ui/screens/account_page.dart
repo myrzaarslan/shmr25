@@ -12,6 +12,7 @@ import '../../ui/widgets/app_bar.dart';
 import '../../ui/widgets/account_chart.dart';
 import '../../domain/repositories/bank_account_repository.dart';
 import '../../domain/models/bank_account.dart';
+import '../../domain/repositories/transaction_repository.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -39,8 +40,9 @@ class _AccountViewState extends State<_AccountView> {
   List<double> _lastAccel = [0, 0, 0];
   static const double shakeThreshold = 15.0;
 
-  final List<double> _days = List.filled(30, 0);
-  final List<String> _labels = List.generate(
+  List<double> _incomes = List.filled(30, 0);
+  List<double> _expenses = List.filled(30, 0);
+  List<String> _labels = List.generate(
     30,
     (i) => '${(i + 1).toString().padLeft(2, '0')}.${DateTime.now().month.toString().padLeft(2, '0')}',
   );
@@ -52,19 +54,48 @@ class _AccountViewState extends State<_AccountView> {
   void initState() {
     super.initState();
     _accelSub = accelerometerEvents.listen(_handleAccel);
-    _loadAccount();
-    // Example: generate mock transactions
-    for (int i = 0; i < _days.length; i++) {
-      _days[i] = i % 2 == 0 ? i * 1000.0 : -i * 500.0;
-    }
+    _loadAccountAndTransactions();
   }
 
-  Future<void> _loadAccount() async {
+  Future<void> _loadAccountAndTransactions() async {
     setState(() => _loading = true);
-    final repo = context.read<BankAccountRepository>();
-    final accounts = await repo.getAllAccounts();
+    final accountRepo = context.read<BankAccountRepository>();
+    final txRepo = context.read<TransactionRepository>();
+    final accounts = await accountRepo.getAllAccounts();
+    final account = accounts.isNotEmpty ? accounts.first : null;
+    if (account == null) {
+      setState(() {
+        _account = null;
+        _loading = false;
+      });
+      return;
+    }
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, 1);
+    final txs = await txRepo.getTransactionsByAccountAndPeriod(
+      account.id,
+      startDate: start,
+      endDate: now,
+    );
+    // Group by day
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    _labels = List.generate(
+      daysInMonth,
+      (i) => '${(i + 1).toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')}',
+    );
+    _incomes = List.filled(daysInMonth, 0);
+    _expenses = List.filled(daysInMonth, 0);
+    for (final tx in txs) {
+      final day = tx.transactionDate.day - 1;
+      final amount = double.tryParse(tx.amount) ?? 0;
+      if (tx.category.isIncome) {
+        _incomes[day] += amount;
+      } else {
+        _expenses[day] += amount;
+      }
+    }
     setState(() {
-      _account = accounts.isNotEmpty ? accounts.first : null;
+      _account = account;
       _loading = false;
     });
   }
@@ -157,7 +188,8 @@ class _AccountViewState extends State<_AccountView> {
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: AccountChart(
-                    values: _days,
+                    incomes: _incomes,
+                    expenses: _expenses,
                     labels: _labels,
                     currency: currency,
                   ),
