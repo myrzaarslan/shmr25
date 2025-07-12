@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'drift_tables.dart';
+import 'package:finance_app/data/source/local/backup_storage.dart';
 
 part 'database.g.dart';
 
@@ -15,6 +16,10 @@ part 'database.g.dart';
     AccountHistories,
     AccountHistoryItems,
     AccountStates,
+    BackupEvents, // Register BackupEvents table
+  ],
+  daos: [
+    BackupStorage, // Register BackupStorage DAO
   ],
 )
 class AppDatabase extends _$AppDatabase {

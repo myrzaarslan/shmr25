@@ -1,18 +1,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/repositories/transaction_repository.dart';
-import '../../../domain/repositories/category_repository.dart';
+import '../../data/repositories/mock_transaction_repository.dart';
+import '../../data/repositories/mock_category_repository.dart';
 import '../../domain/models/transaction.dart';
 import 'transaction_event.dart';
 import 'transaction_state.dart';
 import '../../constants/sort_field.dart';
 
 class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
-  final TransactionRepository _transactionRepository;
-  final CategoryRepository _categoryRepository;
+  final MockTransactionRepository _transactionRepository;
+  final MockCategoryRepository _categoryRepository;
 
   TransactionBloc({
-    required TransactionRepository transactionRepository,
-    required CategoryRepository categoryRepository,
+    required MockTransactionRepository transactionRepository,
+    required MockCategoryRepository categoryRepository,
   }) : _transactionRepository = transactionRepository,
        _categoryRepository = categoryRepository,
        super(TransactionInitial()) {
