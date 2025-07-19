@@ -7,6 +7,7 @@ part 'settings.g.dart';
 abstract class Settings with _$Settings {
   const factory Settings({
     @Default(true) bool useSystemTheme,
+    @Default(false) bool isDarkMode, // Separate dark mode preference
     @Default(0xFF4CAF50) int appTintColor, // Default green
     @Default(true) bool hapticFeedbackEnabled,
     @Default(false) bool biometricEnabled,

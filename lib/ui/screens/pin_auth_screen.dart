@@ -174,21 +174,32 @@ class _PinAuthScreenState extends State<PinAuthScreen> {
   }
 
   void _addDigit(String digit) {
-    if (_pin.length >= 4) return;
+    print('Adding digit: $digit, current pin length: ${_pin.length}, confirming: $_isConfirming');
+    
+    if (_isConfirming) {
+      if (_confirmPin.length >= 4) return;
+    } else {
+      if (_pin.length >= 4) return;
+    }
 
     setState(() {
       _isError = false;
       if (_isConfirming) {
         _confirmPin.add(digit);
+        print('Confirm pin length: ${_confirmPin.length}');
         if (_confirmPin.length == 4) {
+          print('Checking PIN confirmation');
           _checkPin();
         }
       } else {
         _pin.add(digit);
+        print('Pin length: ${_pin.length}');
         if (_pin.length == 4) {
           if (widget.isSetup) {
+            print('Setting up PIN, moving to confirmation');
             _isConfirming = true;
           } else {
+            print('Submitting PIN');
             _submitPin();
           }
         }
@@ -200,6 +211,7 @@ class _PinAuthScreenState extends State<PinAuthScreen> {
   }
 
   void _deleteDigit() {
+    print('Deleting digit, confirming: $_isConfirming');
     setState(() {
       _isError = false;
       if (_isConfirming) {
@@ -220,11 +232,14 @@ class _PinAuthScreenState extends State<PinAuthScreen> {
   void _checkPin() {
     final pinString = _pin.join();
     final confirmPinString = _confirmPin.join();
+    print('Checking PIN: $pinString vs $confirmPinString');
 
     if (pinString == confirmPinString) {
+      print('PIN confirmed successfully');
       widget.onPinConfirmed?.call(pinString);
       Navigator.of(context).pop(pinString);
     } else {
+      print('PIN mismatch, showing error');
       setState(() {
         _isError = true;
         _confirmPin.clear();
@@ -234,6 +249,7 @@ class _PinAuthScreenState extends State<PinAuthScreen> {
 
   void _submitPin() {
     final pinString = _pin.join();
+    print('Submitting PIN: $pinString');
     widget.onPinEntered?.call(pinString);
     Navigator.of(context).pop(pinString);
   }

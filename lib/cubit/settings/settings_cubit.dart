@@ -98,6 +98,21 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
   }
 
+  Future<void> updateDarkMode(bool isDarkMode) async {
+    try {
+      final currentSettings = state.maybeWhen(
+        loaded: (settings) => settings,
+        orElse: () => const Settings(),
+      );
+      
+      final newSettings = currentSettings.copyWith(isDarkMode: isDarkMode);
+      await _repository.saveSettings(newSettings);
+      emit(SettingsState.loaded(newSettings));
+    } catch (e) {
+      emit(SettingsState.error(e.toString()));
+    }
+  }
+
   Future<void> setPinCode(String pinCode) async {
     try {
       await _repository.savePinCode(pinCode);

@@ -14,10 +14,14 @@ import 'data/repositories/drift_transaction_repository.dart';
 import 'data/repositories/drift_bank_account_repository.dart';
 import 'data/repositories/drift_category_repository.dart';
 import 'data/repositories/settings_repository.dart';
+import 'domain/repositories/category_repository.dart';
+import 'domain/repositories/bank_account_repository.dart';
+import 'domain/repositories/transaction_repository.dart';
 import 'network/api_service.dart';
 import 'network/dio_client.dart';
 import 'network/isolates/isolate_manager.dart';
 import 'cubit/settings/settings_cubit.dart';
+import 'bloc/transaction/transaction_bloc.dart';
 import 'theme/app_theme.dart';
 import 'domain/models/settings.dart';
 
@@ -155,14 +159,20 @@ class _MyAppState extends State<MyApp> {
     _settings = widget.settings;
   }
 
+  void _updateLocale(String language) {
+    setState(() {
+      _settings = _settings.copyWith(language: language);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         Provider<AppDatabase>.value(value: widget.database),
-        Provider<DriftTransactionRepository>.value(value: widget.transactionRepository),
-        Provider<DriftBankAccountRepository>.value(value: widget.bankAccountRepository),
-        Provider<DriftCategoryRepository>.value(value: widget.categoryRepository),
+        Provider<TransactionRepository>.value(value: widget.transactionRepository),
+        Provider<BankAccountRepository>.value(value: widget.bankAccountRepository),
+        Provider<CategoryRepository>.value(value: widget.categoryRepository),
         Provider<SettingsRepository>.value(value: widget.settingsRepository),
         Provider<IsolateManager>.value(value: widget.isolateManager),
         ChangeNotifierProvider<ConnectivityProvider>(
@@ -170,6 +180,12 @@ class _MyAppState extends State<MyApp> {
         ),
         BlocProvider<SettingsCubit>(
           create: (_) => SettingsCubit(widget.settingsRepository),
+        ),
+        BlocProvider<TransactionBloc>(
+          create: (_) => TransactionBloc(
+            transactionRepository: widget.transactionRepository,
+            categoryRepository: widget.categoryRepository,
+          ),
         ),
       ],
       child: BlocListener<SettingsCubit, SettingsState>(

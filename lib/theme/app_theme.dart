@@ -115,11 +115,13 @@ class AppTheme {
   }
 
   static ThemeData getTheme(Settings settings, Brightness systemBrightness) {
-    final isDark = settings.useSystemTheme 
+    // If using system theme, follow system brightness
+    // If not using system theme, use the manual dark mode preference
+    final isDarkMode = settings.useSystemTheme 
         ? systemBrightness == Brightness.dark
-        : false; // Always light theme when not using system theme
+        : settings.isDarkMode;
     
-    return isDark 
+    return isDarkMode 
         ? getDarkTheme(settings.appTintColor)
         : getLightTheme(settings.appTintColor);
   }

@@ -9,8 +9,15 @@ import '../../cubit/settings/settings_cubit.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../domain/models/settings.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  final LocalAuthentication _localAuth = LocalAuthentication();
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +37,76 @@ class _SettingsView extends StatefulWidget {
 
 class _SettingsViewState extends State<_SettingsView> {
   final LocalAuthentication _localAuth = LocalAuthentication();
+
+  // Translations for different languages
+  final Map<String, Map<String, String>> _translations = {
+    'ru': {
+      'settings': 'Настройки',
+      'darkTheme': 'Тёмная тема',
+      'darkThemeSubtitle': 'Использовать тёмную тему',
+      'systemTheme': 'Системная тема',
+      'systemThemeSubtitle': 'Использовать системную тему',
+      'mainColor': 'Основной цвет',
+      'mainColorSubtitle': 'Выберите цвет приложения',
+      'sounds': 'Звуки',
+      'soundsSubtitle': 'Звуковые уведомления',
+      'haptics': 'Хаптики',
+      'hapticsSubtitle': 'Тактильная обратная связь',
+      'pinCode': 'Код пароль',
+      'pinCodeSet': 'PIN установлен',
+      'pinCodeNotSet': 'PIN не установлен',
+      'biometric': 'Биометрия',
+      'biometricSubtitle': 'Face ID / Touch ID',
+      'sync': 'Синхронизация',
+      'syncSubtitle': 'Настройки синхронизации',
+      'language': 'Язык',
+      'about': 'О программе',
+      'aboutSubtitle': 'Версия и информация',
+      'biometricNotAvailable': 'Биометрия недоступна',
+      'biometricError': 'Ошибка биометрии',
+      'languageChanged': 'Язык изменен',
+      'languageChangedToRussian': 'Язык изменен на Русский',
+      'languageChangedToEnglish': 'Language changed to English',
+      'pinChanged': 'PIN изменен',
+      'pinSet': 'PIN установлен',
+      'pinRemoved': 'PIN удален',
+    },
+    'en': {
+      'settings': 'Settings',
+      'darkTheme': 'Dark Theme',
+      'darkThemeSubtitle': 'Use dark theme',
+      'systemTheme': 'System Theme',
+      'systemThemeSubtitle': 'Use system theme',
+      'mainColor': 'Main Color',
+      'mainColorSubtitle': 'Choose app color',
+      'sounds': 'Sounds',
+      'soundsSubtitle': 'Sound notifications',
+      'haptics': 'Haptics',
+      'hapticsSubtitle': 'Tactile feedback',
+      'pinCode': 'PIN Code',
+      'pinCodeSet': 'PIN is set',
+      'pinCodeNotSet': 'PIN is not set',
+      'biometric': 'Biometric',
+      'biometricSubtitle': 'Face ID / Touch ID',
+      'sync': 'Sync',
+      'syncSubtitle': 'Sync settings',
+      'language': 'Language',
+      'about': 'About',
+      'aboutSubtitle': 'Version and information',
+      'biometricNotAvailable': 'Biometric not available',
+      'biometricError': 'Biometric error',
+      'languageChanged': 'Language changed',
+      'languageChangedToRussian': 'Язык изменен на Русский',
+      'languageChangedToEnglish': 'Language changed to English',
+      'pinChanged': 'PIN changed',
+      'pinSet': 'PIN set',
+      'pinRemoved': 'PIN removed',
+    },
+  };
+
+  String _getText(String key, String language) {
+    return _translations[language]?[key] ?? key;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +130,8 @@ class _SettingsViewState extends State<_SettingsView> {
     return ListView(
       children: [
         _buildSettingTile(
-          title: 'Тёмная тема',
-          subtitle: 'Использовать системную тему',
+          title: _getText('darkTheme', settings.language),
+          subtitle: _getText('darkThemeSubtitle', settings.language),
           leading: Container(
             width: 40,
             height: 40,
@@ -79,8 +156,8 @@ class _SettingsViewState extends State<_SettingsView> {
           ),
         ),
         _buildSettingTile(
-          title: 'Основной цвет',
-          subtitle: 'Выберите цвет приложения',
+          title: _getText('mainColor', settings.language),
+          subtitle: _getText('mainColorSubtitle', settings.language),
           leading: Container(
             width: 40,
             height: 40,
@@ -94,8 +171,8 @@ class _SettingsViewState extends State<_SettingsView> {
           onTap: () => _showColorPicker(context, settings),
         ),
         _buildSettingTile(
-          title: 'Звуки',
-          subtitle: 'Звуковые уведомления',
+          title: _getText('sounds', settings.language),
+          subtitle: _getText('soundsSubtitle', settings.language),
           leading: Container(
             width: 40,
             height: 40,
@@ -112,8 +189,8 @@ class _SettingsViewState extends State<_SettingsView> {
           },
         ),
         _buildSettingTile(
-          title: 'Хаптики',
-          subtitle: 'Тактильная обратная связь',
+          title: _getText('haptics', settings.language),
+          subtitle: _getText('hapticsSubtitle', settings.language),
           leading: Container(
             width: 40,
             height: 40,
@@ -132,8 +209,8 @@ class _SettingsViewState extends State<_SettingsView> {
           ),
         ),
         _buildSettingTile(
-          title: 'Код пароль',
-          subtitle: settings.pinCode.isNotEmpty ? 'PIN установлен' : 'PIN не установлен',
+          title: _getText('pinCode', settings.language),
+          subtitle: settings.pinCode.isNotEmpty ? _getText('pinCodeSet', settings.language) : _getText('pinCodeNotSet', settings.language),
           leading: Container(
             width: 40,
             height: 40,
@@ -147,8 +224,8 @@ class _SettingsViewState extends State<_SettingsView> {
           onTap: () => _showPinSettings(context, settings),
         ),
         _buildSettingTile(
-          title: 'Биометрия',
-          subtitle: 'Face ID / Touch ID',
+          title: _getText('biometric', settings.language),
+          subtitle: _getText('biometricSubtitle', settings.language),
           leading: Container(
             width: 40,
             height: 40,
@@ -171,13 +248,13 @@ class _SettingsViewState extends State<_SettingsView> {
                     _hapticFeedback();
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Биометрия недоступна')),
+                      SnackBar(content: Text(_getText('biometricNotAvailable', settings.language))),
                     );
                   }
                 } catch (e) {
                   print('Biometric error: $e');
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Ошибка биометрии: $e')),
+                    SnackBar(content: Text(_getText('biometricError', settings.language) + ': $e')),
                   );
                 }
               } else {
@@ -188,8 +265,8 @@ class _SettingsViewState extends State<_SettingsView> {
           ),
         ),
         _buildSettingTile(
-          title: 'Синхронизация',
-          subtitle: 'Настройки синхронизации',
+          title: _getText('sync', settings.language),
+          subtitle: _getText('syncSubtitle', settings.language),
           leading: Container(
             width: 40,
             height: 40,
@@ -206,7 +283,7 @@ class _SettingsViewState extends State<_SettingsView> {
           },
         ),
         _buildSettingTile(
-          title: 'Язык',
+          title: _getText('language', settings.language),
           subtitle: settings.language == 'ru' ? 'Русский' : 'English',
           leading: Container(
             width: 40,
@@ -221,8 +298,8 @@ class _SettingsViewState extends State<_SettingsView> {
           onTap: () => _showLanguageDialog(context, settings),
         ),
         _buildSettingTile(
-          title: 'О программе',
-          subtitle: 'Версия и информация',
+          title: _getText('about', settings.language),
+          subtitle: _getText('aboutSubtitle', settings.language),
           leading: Container(
             width: 40,
             height: 40,
@@ -280,16 +357,16 @@ class _SettingsViewState extends State<_SettingsView> {
       final result = await showDialog<String>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Управление PIN'),
+          title: Text(_getText('pinCode', settings.language)),
           content: const Text('Выберите действие'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, 'change'),
-              child: const Text('Изменить PIN'),
+              child: const Text('Изменить'),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, 'remove'),
-              child: const Text('Удалить PIN'),
+              child: const Text('Удалить'),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -312,6 +389,7 @@ class _SettingsViewState extends State<_SettingsView> {
   }
 
   void _showPinSetup(BuildContext context, bool isChange) async {
+    print('Showing PIN setup, isChange: $isChange');
     final result = await Navigator.push<String>(
       context,
       MaterialPageRoute(
@@ -319,19 +397,28 @@ class _SettingsViewState extends State<_SettingsView> {
           isSetup: true,
           title: isChange ? 'Изменить PIN' : 'Установить PIN',
           onPinConfirmed: (pin) {
+            print('PIN confirmed: $pin');
             context.read<SettingsCubit>().setPinCode(pin);
             _hapticFeedback();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(_getText('pinSet', context.read<SettingsCubit>().state.maybeWhen(
+                loaded: (settings) => settings.language,
+                orElse: () => 'ru',
+              )) + ': $pin')),
+            );
           },
         ),
       ),
     );
+    print('PIN setup result: $result');
   }
 
   void _showLanguageDialog(BuildContext context, Settings settings) {
+    print('Opening language dialog, current language: ${settings.language}');
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Выберите язык'),
+        title: Text(_getText('language', settings.language)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -339,18 +426,32 @@ class _SettingsViewState extends State<_SettingsView> {
               title: const Text('Русский'),
               trailing: settings.language == 'ru' ? const Icon(Icons.check) : null,
               onTap: () {
+                print('Language changed to: ru');
                 context.read<SettingsCubit>().updateLanguage('ru');
                 Navigator.pop(context);
                 _hapticFeedback();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(_getText('languageChangedToRussian', settings.language)),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
               },
             ),
             ListTile(
               title: const Text('English'),
               trailing: settings.language == 'en' ? const Icon(Icons.check) : null,
               onTap: () {
+                print('Language changed to: en');
                 context.read<SettingsCubit>().updateLanguage('en');
                 Navigator.pop(context);
                 _hapticFeedback();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(_getText('languageChangedToEnglish', settings.language)),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
               },
             ),
           ],
