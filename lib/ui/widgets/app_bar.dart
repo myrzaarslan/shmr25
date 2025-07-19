@@ -19,10 +19,16 @@ class _FAppbarState extends State<Appbar> {
   Widget build(BuildContext context) {
     return AppBar(
       centerTitle: true,
-      backgroundColor: const Color.fromRGBO(42, 232, 129, 1),
+      backgroundColor: Theme.of(context).colorScheme.primary,
       leading: widget.leading,
       actions: widget.actions,
-      title: Text(widget.title, style: const TextStyle(fontSize: 22)),
+      title: Text(
+        widget.title, 
+        style: TextStyle(
+          fontSize: 22,
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
+      ),
       automaticallyImplyLeading: false,
     );
   }
